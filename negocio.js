@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = "";
 const duenoId = localStorage.getItem('userId');
 
 // 1. MOSTRAR NOMBRE EN EL HEADER

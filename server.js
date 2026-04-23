@@ -16,11 +16,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 1. CONFIGURACIÓN DE CONEXIÓN
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '1234', 
-    database: 'Citas',
-    port: 3306
+    host: process.env.MYSQLHOST || 'localhost',
+    user: process.env.MYSQLUSER || 'root',
+    password: process.env.MYSQLPASSWORD || '1234', 
+    database: process.env.MYSQLDATABASE || 'Citas',
+    port: process.env.MYSQLPORT || 3306
 });
 
 db.connect(err => {
@@ -336,7 +336,7 @@ app.get('/usuario-nombre/:id', (req, res) => {
     });
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor ZENDA corriendo en http://localhost:${PORT}`);
 });

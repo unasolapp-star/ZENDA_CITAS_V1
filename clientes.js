@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = "";
 const grid = document.getElementById('businessGrid');
 const slotsDiv = document.getElementById('timeSlots');
 let currentPage = 1;

@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000"; 
+const API_URL = ""; 
 const pupils = document.querySelectorAll('.pupil');
 const shapes = document.querySelectorAll('.shape');
 const passwordField = document.getElementById('passwordField');
