@@ -71,6 +71,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const data = await res.json();
         
         if (res.ok) {
+            console.log("✅ Login exitoso, redirigiendo...", data);
             // Guardamos datos de sesión en el navegador
             localStorage.setItem('userId', data.userId);
             localStorage.setItem('userRole', data.rol);
@@ -78,9 +79,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             // Redirección inteligente según el rol guardado en la BD
             window.location.href = data.rol === 'negocio' ? "dashboard-negocio.html" : "dashboard-cliente.html";
         } else {
+            console.error("❌ El servidor rechazó el login:", data);
             alert(data.error || "Credenciales incorrectas");
         }
     } catch (err) { 
+        console.error("❌ Error de red o código:", err);
         alert("Error de conexión con el servidor local. ¿Ejecutaste 'node server.js'?"); 
     }
 });
