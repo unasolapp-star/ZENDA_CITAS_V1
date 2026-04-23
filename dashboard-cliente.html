@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenda - Mi Panel</title>
+    <link rel="stylesheet" href="style-dash.css">
+    <style>
+        /* Estilos para los slots de horarios dinámicos */
+        .slots-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        .slot { 
+            padding: 12px; 
+            text-align: center; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            border: 1px solid #ddd; 
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .slot.libre { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+        .slot.libre:hover { background: #bae6fd; transform: translateY(-2px); }
+        .slot.ocupado { 
+            background: #fee2e2; 
+            color: #991b1b; 
+            cursor: not-allowed; 
+            border-color: #fecaca; 
+            opacity: 0.7; 
+        }
+
+        /* Estilos del Modal Mejorados */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.5); 
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .close { float: right; font-size: 28px; cursor: pointer; color: #64748b; font-weight: bold; }
+        .close:hover { color: #1e293b; }
+
+        /* Info del Negocio dentro del Modal */
+        #businessInfo { 
+            background: #f8fafc; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 15px; 
+            border-left: 5px solid #2563eb; 
+            font-size: 0.95rem; 
+        }
+        #businessInfo p { margin: 8px 0; color: #334155; }
+        
+        /* Card de cita en historial */
+        .cita-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Zenda Cliente</h1>
+    <nav style="display: flex; gap: 15px; align-items: center;">
+        <a href="#" onclick="mostrarSeccion('explorar')" style="color:white; text-decoration:none; font-weight: 500;">Explorar</a>
+        <a href="#" onclick="mostrarSeccion('historial')" style="color:white; text-decoration:none; font-weight: 500;">Mi Historial</a>
+        <span id="userNameDisplay" style="font-weight: bold; margin-left: 20px; color: #f1f5f9;">👤 Cargando...</span>
+        <button onclick="localStorage.clear(); location.href='index.html'" style="background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer;">Cerrar Sesión</button>
+    </nav>
+</header>
+
+<main style="padding: 20px; max-width: 1000px; margin: auto;">
+    <section id="explorar-section">
+        <h2 style="color: #1e293b; margin-bottom: 20px;">Negocios en Santiago Tuxtla</h2>
+        <div class="business-grid" id="businessGrid">
+            </div>
+    </section>
+
+    <section id="historial-section" style="display: none;">
+        <h2 style="color: #1e293b; margin-bottom: 20px;">Mis Citas Agendadas</h2>
+        <div id="historialLista">
+            </div>
+    </section>
+</main>
+
+<div id="calendarModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="cerrarModal()">&times;</span>
+        <h2 id="modalBusinessName" style="color: #1e293b; margin-bottom: 15px;">Nombre del Negocio</h2>
+        
+        <div id="businessInfo"></div>
+
+        <div class="booking-form">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Selecciona la Fecha:</label>
+            <input type="date" id="appointmentDate" onchange="actualizarHorarios()" style="width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit;">
+            
+            <h3 style="font-size: 1.1rem; margin-bottom: 10px;">Horarios Disponibles</h3>
+            <div id="timeSlots" class="slots-container">
+                <p style="color: #64748b; grid-column: 1 / -1; text-align: center;">Selecciona una fecha para ver horarios</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="clientes.js"></script>
+</body>
+</html>

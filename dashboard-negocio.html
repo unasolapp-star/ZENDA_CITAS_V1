@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenda - Panel de Negocio</title>
+    <link rel="stylesheet" href="style-dash.css">
+    <style>
+        /* Estilos mejorados para el panel de administración */
+        .admin-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .config-section form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .config-section label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #475569;
+            margin-top: 5px;
+        }
+
+        .config-section input, .config-section select, .config-section textarea {
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline-color: #2563eb;
+        }
+
+        .config-section textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Estilo para fila de horarios (dos columnas) */
+        .time-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-save {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-save:hover { background: #1d4ed8; transform: translateY(-1px); }
+        
+        /* Tabla de citas */
+        .appointments-section { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+        #adminAppointmentsList { overflow-x: auto; }
+
+        @media (max-width: 900px) {
+            .admin-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Zenda Santiago Tuxtla</h1>
+    <div style="display: flex; align-items: center; gap: 20px;">
+        <span id="userNameDisplay" style="font-weight: bold; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px;">👤 Cargando...</span>
+        <button onclick="localStorage.clear(); location.href='index.html'" style="background: #ef4444; border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer;">Cerrar Sesión</button>
+    </div>
+</header>
+
+<main class="admin-container" style="padding: 20px;">
+    <section class="config-section">
+        <h2>⚙️ Configurar mi Negocio</h2>
+        <form id="businessConfig">
+            <label>Nombre Comercial:</label>
+            <input type="text" id="bizName" placeholder="Nombre del Negocio" required>
+            
+            <label>Teléfono del Negocio:</label>
+            <input type="tel" id="bizPhone" placeholder="Teléfono de contacto" required>
+            
+            <label>Giro o Categoría:</label>
+            <select id="bizCategory">
+                <option value="Barbería">Barbería</option>
+                <option value="Dentista">Dentista</option>
+                <option value="Consultorio">Consultorio</option>
+                <option value="Estética">Estética</option>
+            </select>
+
+            <label>Dirección (Calle y Número):</label>
+            <input type="text" id="bizStreet" placeholder="Ej. Calle Real #123">
+            
+            <label>Colonia/Barrio:</label>
+            <input type="text" id="bizNeighborhood" placeholder="Ej. Barrio de San José">
+
+            <div class="time-group">
+                <div>
+                    <label>Abre a las:</label>
+                    <input type="time" id="bizOpen" required>
+                </div>
+                <div>
+                    <label>Cierra a las:</label>
+                    <input type="time" id="bizClose" required>
+                </div>
+            </div>
+
+            <label>Duración de cada cita:</label>
+            <select id="bizInterval">
+                <option value="30">30 minutos</option>
+                <option value="45">45 minutos</option>
+                <option value="60" selected>1 hora</option>
+                <option value="90">1 hora y media</option>
+                <option value="120">2 horas</option>
+            </select>
+            
+            <label>Referencia de ubicación:</label>
+            <textarea id="bizRef" placeholder="Ej. Frente al parque central, local color azul"></textarea>
+
+            <button type="submit" class="btn-save">💾 Guardar Cambios</button>
+        </form>
+    </section>
+
+    <section class="appointments-section">
+        <h2>📅 Próximas Citas</h2>
+        <div id="adminAppointmentsList">
+            <p style="color: #64748b;">Consultando citas en la base de datos...</p>
+        </div>
+    </section>
+</main>
+
+<script src="negocio.js"></script>
+</body>
+</html>
