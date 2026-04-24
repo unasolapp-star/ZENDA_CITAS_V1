@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 const app = express();
 
 app.use(cors());
@@ -178,20 +179,31 @@ app.put('/actualizar-negocio/:duenoId', (req, res) => {
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, './uploads'),
-    filename: (req, file, cb) => cb(null, 'logo-' + Date.now() + path.extname(file.originalname))
-});
+// Cambiamos a memoryStorage para poder procesar la imagen antes de guardarla en el disco
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-app.post('/upload-logo/:duenoId', upload.single('logo'), (req, res) => {
+app.post('/upload-logo/:duenoId', upload.single('logo'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: "No se subió ningún archivo" });
-    const logoUrl = `/uploads/${req.file.filename}`;
     
-    db.query('UPDATE negocios SET logo_url = ? WHERE dueno_id = ?', [logoUrl, req.params.duenoId], (err) => {
-        if (err) return res.status(500).json({ error: "Error al guardar el logo" });
-        res.json({ logo_url: logoUrl });
-    });
+    const filename = 'logo-' + Date.now() + '.webp';
+    const filepath = path.join(__dirname, 'uploads', filename);
+    const logoUrl = `/uploads/${filename}`;
+    
+    try {
+        await sharp(req.file.buffer)
+            .resize(300, 300, { fit: 'cover' }) // Recorta la imagen a un cuadrado de 300x300px
+            .webp({ quality: 80 }) // La convierte a formato WebP optimizado
+            .toFile(filepath);
+            
+        db.query('UPDATE negocios SET logo_url = ? WHERE dueno_id = ?', [logoUrl, req.params.duenoId], (err) => {
+            if (err) return res.status(500).json({ error: "Error al guardar el logo" });
+            res.json({ logo_url: logoUrl });
+        });
+    } catch (err) {
+        console.error("Error procesando imagen con sharp:", err);
+        res.status(500).json({ error: "Error al procesar y guardar la imagen" });
+    }
 });
 
 // 5. LÓGICA DE GENERACIÓN DE SLOTS DINÁMICOS
