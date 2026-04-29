@@ -73,8 +73,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         if (res.ok) {
             console.log("✅ Login exitoso, redirigiendo...", data);
             // Guardamos datos de sesión en el navegador
-            localStorage.setItem('userId', data.userId);
-            localStorage.setItem('userRole', data.rol);
+            sessionStorage.setItem('userId', data.userId);
+            sessionStorage.setItem('userRole', data.rol);
             
             // Redirección inteligente según el rol guardado en la BD
             window.location.href = data.rol === 'negocio' ? "dashboard-negocio.html" : "dashboard-cliente.html";

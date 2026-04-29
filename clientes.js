@@ -147,7 +147,7 @@ async function abrirModal(id) {
 
 // 3. Mostrar nombre en el header
 async function mostrarNombreUsuario() {
-    const id = localStorage.getItem('userId');
+    const id = sessionStorage.getItem('userId');
     const display = document.getElementById('userNameDisplay');
     if (!id || !display) return;
 
@@ -169,7 +169,7 @@ let paginaHistorial = 1;
 let estadoHistorial = 'pendiente';
 
 async function cargarHistorial() {
-    const id = localStorage.getItem('userId');
+    const id = sessionStorage.getItem('userId');
     const res = await fetch(`${API_URL}/citas-cliente/${id}?page=${paginaHistorial}&limit=10&estado=${estadoHistorial}`);
     const result = await res.json();
     const contenedor = document.getElementById('historialLista');
@@ -264,7 +264,7 @@ async function actualizarHorarios() {
 // 6. Confirmar y Cancelar Citas
 async function confirmarCita(hora) {
     const bizId = document.getElementById('calendarModal').dataset.bizId;
-    const userId = localStorage.getItem('userId');
+    const userId = sessionStorage.getItem('userId');
     const fecha = document.getElementById('appointmentDate').value;
 
     if (!confirm(`¿Confirmar tu cita para las ${hora}?`)) return;

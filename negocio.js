@@ -1,5 +1,5 @@
 const API_URL = "";
-const duenoId = localStorage.getItem('userId');
+const duenoId = sessionStorage.getItem('userId');
 
 // 1. MOSTRAR NOMBRE EN EL HEADER
 async function mostrarNombreUsuario() {

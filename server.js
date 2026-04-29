@@ -16,20 +16,24 @@ app.use(express.static(__dirname));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 1. CONFIGURACIÓN DE CONEXIÓN
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: process.env.MYSQLHOST || 'localhost',
     user: process.env.MYSQLUSER || 'root',
     password: process.env.MYSQLPASSWORD || '1234', 
     database: process.env.MYSQLDATABASE || 'Citas',
-    port: process.env.MYSQLPORT || 3306
+    port: process.env.MYSQLPORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect(err => {
+db.getConnection((err, connection) => {
     if (err) {
         console.error('❌ Error conectando a MySQL:', err);
         return;
     }
-    console.log('✅ Zenda conectado a MySQL Local (BD: Citas)');
+    console.log('✅ Zenda conectado a MySQL en Railway');
+    connection.release();
 });
 
 // 2. RUTA DE REGISTRO
@@ -41,8 +45,8 @@ app.post('/register', async (req, res) => {
         
         db.query(query, [nombre, email, hashedPass, rol, telefono], (err, result) => {
             if (err) {
-                console.error(err);
-                return res.status(400).json({ error: "El correo ya existe" });
+                console.error("❌ Error en registro:", err);
+                return res.status(400).json({ error: err.code === 'ER_DUP_ENTRY' ? "El correo ya existe" : "Error al registrar en la base de datos" });
             }
             
             if (rol === 'negocio') {
@@ -66,7 +70,10 @@ app.post('/login', (req, res) => {
     const { email, password } = req.body;
     const query = 'SELECT * FROM usuarios WHERE email = ?';
     db.query(query, [email], async (err, results) => {
-        if (err) return res.status(500).json({ error: "Error en la base de datos" });
+        if (err) {
+            console.error("❌ Error en login:", err);
+            return res.status(500).json({ error: "Error en la base de datos al iniciar sesión" });
+        }
         if (results.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
 
         const match = await bcrypt.compare(password, results[0].password);
