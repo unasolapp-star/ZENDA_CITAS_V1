@@ -247,13 +247,14 @@ app.get('/citas-ocupadas', (req, res) => {
 app.post('/citas', (req, res) => {
     const { cliente_id, negocio_id, fecha, hora } = req.body;
     
-    // 0. Validar que la fecha y hora no sean en el pasado
+    // 0. Validar que la fecha y hora no sean en el pasado ni muy cercanas
     const now = new Date();
+    now.setMinutes(now.getMinutes() + 30); // Agregamos un margen de 30 minutos
     const currentDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
     const currentTime = now.toTimeString().substring(0, 5);
 
     if (fecha < currentDate || (fecha === currentDate && hora < currentTime)) {
-        return res.status(400).json({ error: "No puedes agendar citas en fechas u horarios pasados." });
+        return res.status(400).json({ error: "No puedes agendar citas en el pasado o con menos de 30 minutos de anticipación." });
     }
 
     // 1. Verificar el límite de citas por día (Máximo 3)

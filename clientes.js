@@ -137,7 +137,14 @@ async function abrirModal(id) {
         `;
 
         // Resetear fecha y mensaje de slots
-        document.getElementById('appointmentDate').value = "";
+        const inputFecha = document.getElementById('appointmentDate');
+        if (inputFecha) {
+            inputFecha.value = "";
+            // Bloquear fechas anteriores a hoy en el selector
+            const today = new Date();
+            const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            inputFecha.min = localDate;
+        }
         slotsDiv.innerHTML = "<p style='color: #64748b;'>Selecciona una fecha primero</p>";
     } catch (err) {
         console.error("Error al obtener detalles:", err);
@@ -216,6 +223,14 @@ async function actualizarHorarios() {
     const fecha = document.getElementById('appointmentDate').value;
     if (!fecha) return;
 
+    // Validar estricto en frontend que no sea una fecha pasada si el navegador falla
+    const nowOriginal = new Date();
+    const hoyLocal = new Date(nowOriginal.getTime() - nowOriginal.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    if (fecha < hoyLocal) {
+        slotsDiv.innerHTML = "<p style='color: #dc2626; font-weight: bold;'>No puedes seleccionar fechas pasadas.</p>";
+        return;
+    }
+
     slotsDiv.innerHTML = "<p>Cargando horarios...</p>";
 
     // A. Validar que la fecha elegida caiga en un día habilitado por el negocio
@@ -246,12 +261,13 @@ async function actualizarHorarios() {
             return;
         }
 
-        // Ocultar horarios que ya pasaron si se seleccionó el día de hoy
+        // Ocultar horarios que ya pasaron o que están muy cerca (30 minutos de margen)
         const today = new Date();
-        const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-        const localTime = today.toTimeString().substring(0, 5);
+        today.setMinutes(today.getMinutes() + 30);
+        const minDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        const minTime = today.toTimeString().substring(0, 5);
         
-        const horariosValidos = horariosDisponibles.filter(h => !(fecha === localDate && h < localTime));
+        const horariosValidos = horariosDisponibles.filter(h => !(fecha < minDate || (fecha === minDate && h < minTime)));
 
         if (horariosValidos.length === 0) {
             slotsDiv.innerHTML = "<p style='color: #d97706;'>Ya no hay horarios disponibles para hoy.</p>";

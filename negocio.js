@@ -292,7 +292,7 @@ function cambiarPaginaAdmin(pag) { paginaCitasAdmin = pag; cargarCitasAdmin(); }
 function seleccionarTodasCitas() { document.querySelectorAll('.cita-check').forEach(cb => cb.checked = true); }
 
 async function cambiarEstadoCita(id, estado) {
-    if(estado === 'eliminada' && !confirm("¿Seguro que deseas eliminar esta cita? (Se purgará en 3 días)")) return;
+    if(estado === 'eliminada' && !confirm("¿Seguro que deseas eliminar esta cita? (Se eliminará para siempre dentro de 3 días)")) return;
     try {
         await fetch(`${API_URL}/citas/${id}/estado`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({estado}) });
         cargarCitasAdmin();
