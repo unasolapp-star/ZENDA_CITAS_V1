@@ -3,56 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zenda - Login Interactivo</title>
+    <title>Zenda - Iniciar Sesión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Conectamos con tu hoja de estilos -->
     <link rel="stylesheet" href="style.css">
-    <style>
-        .password-hint { font-size: 0.75rem; color: #666; margin-top: -10px; margin-bottom: 10px; }
-        .hidden { display: none !important; }
-    </style>
+    <!-- Logo para la pestaña del navegador -->
+    <link rel="icon" href="/logo.png?v=2" type="image/png">
 </head>
 <body>
+
     <div class="login-container">
-        <div class="visual-section" id="visualSection">
-            <div class="shape circle">
-                <div class="eye"><div class="pupil"></div></div>
-                <div class="eye"><div class="pupil"></div></div>
-            </div>
-            <div class="shape square">
-                <div class="eye"><div class="pupil"></div></div>
-                <div class="eye"><div class="pupil"></div></div>
+        <!-- Lado Izquierdo: Branding -->
+        <div class="brand-section" id="brand-section">
+            <h1>Zenda</h1>
+            <div class="mascots-wrapper" id="mascots-wrapper">
+                <!-- Mascota 1: El Cuadrado -->
+                <div class="mascot-animator" id="cuadrado">
+                    <div class="mascot-3d-camera">
+                        <div class="mascot-inner">
+                            <div class="mascot-front">
+                                <div class="square-body"></div>
+                                <div class="face">
+                                    <div class="eyebrows"><div class="eyebrow left"></div><div class="eyebrow right"></div></div>
+                                    <div class="eyes-container">
+                                        <div class="eye"><div class="pupil"></div></div>
+                                        <div class="eye"><div class="pupil"></div></div>
+                                    </div>
+                                    <div class="mouth mouth-neutral"></div>
+                                </div>
+                            </div>
+                            <div class="mascot-back">
+                                <div class="square-body"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mascota 2: El Círculo -->
+                <div class="mascot-animator" id="circulo">
+                    <div class="mascot-3d-camera">
+                        <div class="mascot-inner">
+                            <div class="mascot-front">
+                                <div class="circle-body"></div>
+                                <div class="face">
+                                    <div class="eyebrows"><div class="eyebrow left"></div><div class="eyebrow right"></div></div>
+                                    <div class="eyes-container">
+                                        <div class="eye"><div class="pupil"></div></div>
+                                        <div class="eye"><div class="pupil"></div></div>
+                                    </div>
+                                    <div class="mouth mouth-neutral"></div>
+                                </div>
+                            </div>
+                            <div class="mascot-back">
+                                <div class="circle-body"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- Lado Derecho: Formularios -->
         <div class="form-section">
             <div class="form-wrapper">
+                <!-- FORMULARIO DE INICIO DE SESIÓN -->
                 <form id="loginForm">
                     <h2>Iniciar Sesión</h2>
-                    <input type="email" id="email" placeholder="Correo electrónico" required>
-                    <input type="password" id="passwordField" placeholder="Contraseña" required>
+                    <p class="subtitle">Bienvenido de vuelta a Zenda</p>
+                    
+                    <div class="input-group">
+                        <label for="email">Correo electrónico</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="passwordField">Contraseña</label>
+                        <input type="password" id="passwordField" required>
+                    </div>
                     <button type="submit" class="btn-login">Ingresar</button>
-                    <p>¿No tienes cuenta? <a href="javascript:void(0)" onclick="toggleForms()">Regístrate aquí</a></p>
+                    
+                    <div class="form-footer">
+                        ¿No tienes cuenta? <a onclick="toggleForms()">Regístrate aquí</a>
+                    </div>
                 </form>
 
-                <form id="registerForm" style="display: none;">
+                <!-- FORMULARIO DE REGISTRO (Oculto por defecto) -->
+                <form id="registerForm">
                     <h2>Crear Cuenta</h2>
-                    <input type="text" id="regName" placeholder="Nombre Completo" required>
-                    <input type="email" id="regEmail" placeholder="Correo electrónico" required>
-                    <input type="tel" id="regPhone" placeholder="Teléfono de contacto" required>
-                    <input type="password" id="regPass" placeholder="Nueva Contraseña" required>
-                    <p class="password-hint">Mínimo 9 caracteres, una mayúscula, un número y un símbolo.</p>
-
-                    <label>Tipo de usuario:</label>
-                    <select id="regRole">
-                        <option value="cliente">Cliente (Busco servicios)</option>
-                        <option value="negocio">Dueño de Negocio (Ofrezco servicios)</option>
-                    </select>
+                    <p class="subtitle">Únete a la plataforma Zenda</p>
                     
-                    <button type="submit" class="btn-login">Registrarme</button>
-                    <p>¿Ya tienes cuenta? <a href="javascript:void(0)" onclick="toggleForms()">Inicia sesión</a></p>
+                    <div class="input-group"><label>Nombre Completo</label><input type="text" id="regName" required placeholder="Ej: Andrés Felipe Gómez Sáez"></div>
+                    <div class="input-group"><label>Correo Electrónico</label><input type="email" id="regEmail" required placeholder="ejemplo@gmail.com"></div>
+                    <div class="input-group"><label>Teléfono (10 dígitos)</label><input type="tel" id="regPhone" required maxlength="10" placeholder="Ej: 5512345678"></div>
+                    <div class="input-group">
+                        <label>Tipo de Rol</label>
+                        <select id="regRole">
+                            <option value="cliente">Soy Cliente</option>
+                            <option value="negocio">Soy Dueño de Negocio</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label>Contraseña</label><input type="password" id="regPass" required placeholder="Mín. 9 letras, 1 mayús, 1 núm, 1 esp. (_-/&$)"></div>
+                    
+                    <button type="submit" class="btn-login">Crear cuenta</button>
+                    <div class="form-footer">
+                        ¿Ya tienes cuenta? <a onclick="toggleForms()">Inicia sesión</a>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- Conectamos con tu lógica -->
     <script src="script.js"></script>
 </body>
 </html>

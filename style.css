@@ -18,56 +18,84 @@ body {
 .login-container { display: flex; width: 100%; height: 100%; }
 
 /* --- SECCIÓN VISUAL (Animación de Ojos) --- */
-.visual-section { 
-    flex: 1.2; 
-    background: #cbd5e1; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    gap: 50px; 
-    perspective: 1000px; 
-}
-
-.shape {
-    width: 130px; 
-    height: 130px; 
-    background: var(--primary);
-    display: flex; 
-    justify-content: center; 
+.brand-section {
+    flex: 1.2;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+    color: white;
+    position: relative;
+    overflow: hidden;
 }
 
-.circle { border-radius: 50%; }
-.square { border-radius: 20px; }
-
-.eye { 
-    width: 35px; 
-    height: 35px; 
-    background: white; 
-    border-radius: 50%; 
-    position: relative; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
+.brand-section h1 {
+    font-size: 4rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 50px;
+    text-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-.pupil { 
-    width: 14px; 
-    height: 14px; 
-    background: #1e293b; 
-    border-radius: 50%; 
-    position: absolute; 
-    transition: transform 0.1s ease-out, height 0.2s;
+.mascots-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    justify-content: center;
 }
 
-/* Estado de "Shame" cuando se enfoca la contraseña */
-.shape.shame { 
-    transform: rotateY(180deg) scale(0.9); 
-    opacity: 0.3; 
-}
+/* --- ESTRUCTURA 3D DE LAS MASCOTAS --- */
+.mascot-animator { cursor: pointer; }
+.mascot-3d-camera { width: 140px; height: 140px; perspective: 1000px; }
+.mascot-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+.girado-espalda .mascot-inner { transform: rotateY(180deg); }
+.mascot-front, .mascot-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; justify-content: center; align-items: center; }
+.mascot-back { transform: rotateY(180deg); }
+
+/* --- LOS CUERPOS --- */
+.square-body { width: 130px; height: 130px; background-color: #2563eb; border-radius: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 5px 10px rgba(255,255,255,0.2); border: 4px solid rgba(255,255,255,0.8); transition: background-color 0.3s; }
+.circle-body { width: 130px; height: 130px; background-color: #2563eb; border-radius: 50%; box-shadow: 0 10px 20px rgba(0,0,0,0.2), inset 0 5px 10px rgba(255,255,255,0.2); border: 4px solid rgba(255,255,255,0.8); transition: background-color 0.3s; }
+.mascot-back .square-body, .mascot-back .circle-body { background-color: #1e3a8a; box-shadow: inset 0 0 30px rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.3); }
+
+/* --- ROSTROS --- */
+.face { position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: center; transform: translateY(-5px); }
+.eyebrows { display: flex; gap: 15px; margin-bottom: -5px; opacity: 0; transition: opacity 0.2s, transform 0.2s; }
+.eyebrow { width: 25px; height: 6px; background-color: #000000; border-radius: 3px; }
+.eyes-container { display: flex; gap: 12px; margin-bottom: 8px; }
+.eye { width: 32px; height: 32px; background-color: white; border-radius: 50%; position: relative; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); overflow: hidden; transition: all 0.2s ease; }
+.pupil { width: 14px; height: 14px; background-color: #000000; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: opacity 0.2s; }
+
+/* --- BOCAS --- */
+.mouth { background-color: #000000; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.mouth-neutral { width: 16px; height: 4px; border-radius: 2px; }
+.mouth-happy { width: 28px; height: 14px; border-radius: 0 0 28px 28px; }
+.mouth-surprised { width: 16px; height: 20px; border-radius: 50%; }
+.mouth-angry { width: 24px; height: 10px; border-radius: 20px 20px 0 0; transform: translateY(5px); }
+.mouth-nervous { width: 20px; height: 4px; border-radius: 4px; transform: translateY(5px); }
+.mouth-dizzy { width: 30px; height: 15px; background-color: transparent !important; position: relative; }
+.mouth-dizzy::after { content: '~'; position: absolute; font-size: 35px; color: #064e3b; font-weight: bold; line-height: 1; left: 50%; top: 0; transform: translate(-50%, -10px); }
+
+/* --- ESTADOS --- */
+.ojos-cerrados .eye { height: 6px; border-radius: 10px; margin-top: 13px; background-color: #cbd5e1; box-shadow: none; }
+.ojos-cerrados .pupil { opacity: 0; }
+.estado-enojado .square-body, .estado-enojado .circle-body { background-color: #ef4444; }
+.estado-enojado .eyebrows { opacity: 1; }
+.estado-enojado .eyebrow.left { transform: rotate(25deg) translateY(5px); }
+.estado-enojado .eyebrow.right { transform: rotate(-25deg) translateY(5px); }
+.estado-enojado:not(.ojos-cerrados) .eye { height: 25px; border-radius: 10px 10px 50% 50%; margin-top: 7px; }
+.estado-mareado .square-body, .estado-mareado .circle-body { background-color: #84cc16; border-color: #4d7c0f;} 
+.estado-mareado .eye { background-color: #f1f5f9; }
+.estado-mareado .pupil { animation: pupil-dizzy 0.8s infinite alternate ease-in-out; }
+
+/* --- ANIMACIONES GLOBALES --- */
+@keyframes shake-animation { 0% { transform: translateX(0); } 25% { transform: translateX(-4px) rotate(-3deg); } 50% { transform: translateX(4px) rotate(3deg); } 75% { transform: translateX(-4px) rotate(-3deg); } 100% { transform: translateX(0); } }
+@keyframes sway-animation { 0%, 100% { transform: rotate(-10deg) translateY(-5px); } 50% { transform: rotate(10deg) translateY(5px); } }
+@keyframes pupil-dizzy { 0% { transform: translate(-80%, -20%) scale(0.8); } 100% { transform: translate(-20%, -80%) scale(1.2); } }
+.shake-click { animation: shake-animation 0.2s ease-in-out; }
+.estado-enojado:not(.girado-espalda) { animation: shake-animation 0.4s infinite; }
+.estado-mareado { animation: sway-animation 2s infinite ease-in-out; }
+
 
 /* --- SECCIÓN DEL FORMULARIO --- */
 .form-section { 
@@ -188,11 +216,11 @@ input:focus, select:focus {
 
 /* Responsividad */
 @media (max-width: 1024px) {
-    .visual-section { flex: 0.8; gap: 30px; }
-    .shape { width: 100px; height: 100px; }
+    .brand-section { flex: 0.8; }
+    .mascots-wrapper { gap: 30px; flex-direction: column; }
 }
 
 @media (max-width: 900px) {
-    .visual-section { display: none; }
+    .brand-section { display: none; }
     .form-section { flex: 1; }
 }

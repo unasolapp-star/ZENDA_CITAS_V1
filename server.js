@@ -247,6 +247,15 @@ app.get('/citas-ocupadas', (req, res) => {
 app.post('/citas', (req, res) => {
     const { cliente_id, negocio_id, fecha, hora } = req.body;
     
+    // 0. Validar que la fecha y hora no sean en el pasado
+    const now = new Date();
+    const currentDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const currentTime = now.toTimeString().substring(0, 5);
+
+    if (fecha < currentDate || (fecha === currentDate && hora < currentTime)) {
+        return res.status(400).json({ error: "No puedes agendar citas en fechas u horarios pasados." });
+    }
+
     // 1. Verificar el límite de citas por día (Máximo 3)
     const limitQuery = 'SELECT COUNT(*) as count FROM citas WHERE cliente_id = ? AND negocio_id = ? AND fecha = ? AND estado NOT IN ("rechazada", "eliminada")';
     db.query(limitQuery, [cliente_id, negocio_id, fecha], (err, limitResults) => {

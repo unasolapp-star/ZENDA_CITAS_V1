@@ -246,7 +246,19 @@ async function actualizarHorarios() {
             return;
         }
 
-        slotsDiv.innerHTML = horariosDisponibles.map(h => {
+        // Ocultar horarios que ya pasaron si se seleccionó el día de hoy
+        const today = new Date();
+        const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        const localTime = today.toTimeString().substring(0, 5);
+        
+        const horariosValidos = horariosDisponibles.filter(h => !(fecha === localDate && h < localTime));
+
+        if (horariosValidos.length === 0) {
+            slotsDiv.innerHTML = "<p style='color: #d97706;'>Ya no hay horarios disponibles para hoy.</p>";
+            return;
+        }
+
+        slotsDiv.innerHTML = horariosValidos.map(h => {
             const estaOcupado = ocupadas.includes(h);
             return `
                 <div class="slot ${estaOcupado ? 'ocupado' : 'libre'}" 
