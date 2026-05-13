@@ -6,6 +6,8 @@
     <title>Zenda - Panel de Negocio</title>
     <link rel="stylesheet" href="style-dash.css">
     <link rel="icon" href="/logo.png?v=2" type="image/png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         /* Estilos mejorados para el panel de administración */
         .admin-container {
@@ -131,6 +133,9 @@
             
             <label>Referencia de ubicación:</label>
             <textarea id="bizRef" placeholder="Ej. Frente al parque central, local color azul"></textarea>
+            
+            <label>Ubicación exacta en el mapa (Arrastra el pin rojo a tu local):</label>
+            <div id="mapa-negocio" style="height: 300px; width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; z-index: 1;"></div>
 
             <button type="submit" class="btn-save">💾 Guardar Cambios</button>
         </form>

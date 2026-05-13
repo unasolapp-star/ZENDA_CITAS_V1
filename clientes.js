@@ -4,6 +4,9 @@ const slotsDiv = document.getElementById('timeSlots');
 let currentPage = 1;
 let currentCategory = 'Todas';
 
+// Variables para el mapa
+let mapCliente, markerCliente;
+
 // 1. Cargar categorías desde BD
 async function cargarCategorias() {
     try {
@@ -135,6 +138,32 @@ async function abrirModal(id) {
             <p>📝 <b>Ref:</b> ${n.referencia || 'Sin referencias'}</p>
             <p>📅 <b>Días de atención:</b> ${obtenerDiasTexto(n.dias_habiles)}</p>
         `;
+
+        // Configuración del mapa del cliente
+        const mapContainer = document.getElementById('mapa-cliente-container');
+        if (n.latitud && n.longitud) {
+            mapContainer.style.display = 'block';
+            const lat = parseFloat(n.latitud);
+            const lng = parseFloat(n.longitud);
+            
+            document.getElementById('btnGoogleMaps').href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+            if (!mapCliente) {
+                mapCliente = L.map('mapa-cliente').setView([lat, lng], 16);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(mapCliente);
+                markerCliente = L.marker([lat, lng]).addTo(mapCliente);
+            } else {
+                markerCliente.setLatLng([lat, lng]);
+                mapCliente.setView([lat, lng], 16);
+            }
+            
+            // Refrescar tamaño porque Leaflet falla si se inicializa en un contenedor oculto
+            setTimeout(() => { mapCliente.invalidateSize(); }, 300);
+        } else {
+            mapContainer.style.display = 'none';
+        }
 
         // Resetear fecha y mensaje de slots
         const inputFecha = document.getElementById('appointmentDate');

@@ -1,6 +1,11 @@
 const API_URL = "";
 const duenoId = sessionStorage.getItem('userId');
 
+// Variables para el mapa
+let map, marker;
+let selectedLat = 18.46222; // Coordenadas por defecto de Santiago Tuxtla
+let selectedLng = -95.30138;
+
 // 1. MOSTRAR NOMBRE EN EL HEADER
 async function mostrarNombreUsuario() {
     const display = document.getElementById('userNameDisplay');
@@ -115,6 +120,23 @@ function inicializarLogo(logo_url) {
     }
 }
 
+// INICIALIZAR EL MAPA
+function inicializarMapa() {
+    if (map) return;
+    map = L.map('mapa-negocio').setView([selectedLat, selectedLng], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    marker = L.marker([selectedLat, selectedLng], { draggable: true }).addTo(map);
+    marker.on('dragend', function (e) {
+        const position = marker.getLatLng();
+        selectedLat = position.lat;
+        selectedLng = position.lng;
+    });
+}
+
 // 2. PRECARGAR DATOS DEL NEGOCIO (Configuración)
 async function cargarDatosNegocio() {
     if (!duenoId) return;
@@ -142,6 +164,17 @@ async function cargarDatosNegocio() {
             inicializarDiasHabiles(data.dias_habiles);
             // Inicializar el logo
             inicializarLogo(data.logo_url);
+            
+            // Actualizar coordenadas si existen
+            if (data.latitud && data.longitud) {
+                selectedLat = parseFloat(data.latitud);
+                selectedLng = parseFloat(data.longitud);
+            }
+            inicializarMapa();
+            if (marker) {
+                marker.setLatLng([selectedLat, selectedLng]);
+                map.setView([selectedLat, selectedLng], 15);
+            }
         }
     } catch (err) { 
         console.error("Error al precargar datos:", err); 
@@ -174,6 +207,8 @@ if (configForm) {
             calle: document.getElementById('bizStreet').value || "",
             colonia: document.getElementById('bizNeighborhood').value || "",
             referencia: document.getElementById('bizRef').value || "",
+            latitud: selectedLat,
+            longitud: selectedLng,
             // Enviamos las horas ya blindadas y formateadas
             hora_apertura: finalOpen,
             hora_cierre: finalClose,

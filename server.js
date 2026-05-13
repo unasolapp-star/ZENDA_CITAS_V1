@@ -91,7 +91,7 @@ app.get('/negocios', (req, res) => {
     const categoria = req.query.categoria || 'Todas';
 
     let countQuery = 'SELECT COUNT(*) as total FROM negocios n';
-    let dataQuery = 'SELECT n.*, d.calle, d.colonia, d.referencia FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id';
+    let dataQuery = 'SELECT n.*, d.calle, d.colonia, d.referencia, d.latitud, d.longitud FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id';
     let queryParams = [];
 
     if (categoria !== 'Todas') {
@@ -122,7 +122,7 @@ app.get('/categorias', (req, res) => {
 });
 
 app.get('/mi-negocio/:duenoId', (req, res) => {
-    const q = `SELECT n.*, d.calle, d.colonia, d.referencia, 
+    const q = `SELECT n.*, d.calle, d.colonia, d.referencia, d.latitud, d.longitud,
                (SELECT GROUP_CONCAT(dia_semana) FROM negocios_dias WHERE negocio_id = n.id) as dias_habiles 
                FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id WHERE n.dueno_id = ?`;
     db.query(q, [req.params.duenoId], (err, results) => {
@@ -132,7 +132,7 @@ app.get('/mi-negocio/:duenoId', (req, res) => {
 });
 
 app.get('/mi-negocio-detalles/:id', (req, res) => {
-    const q = `SELECT n.*, d.calle, d.colonia, d.referencia, 
+    const q = `SELECT n.*, d.calle, d.colonia, d.referencia, d.latitud, d.longitud,
                (SELECT GROUP_CONCAT(dia_semana) FROM negocios_dias WHERE negocio_id = n.id) as dias_habiles 
                FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id WHERE n.id = ?`;
     db.query(q, [req.params.id], (err, results) => {
@@ -143,7 +143,7 @@ app.get('/mi-negocio-detalles/:id', (req, res) => {
 
 // Actualización completa normalizada
 app.put('/actualizar-negocio/:duenoId', (req, res) => {
-    const { nombre_negocio, telefono_negocio, categoria, calle, colonia, referencia, hora_apertura, hora_cierre, intervalo_minutos, dias_habiles } = req.body;
+    const { nombre_negocio, telefono_negocio, categoria, calle, colonia, referencia, latitud, longitud, hora_apertura, hora_cierre, intervalo_minutos, dias_habiles } = req.body;
     
     // 1. Encontrar IDs involucrados
     db.query('SELECT id, direccion_id FROM negocios WHERE dueno_id = ?', [req.params.duenoId], (err, results) => {
@@ -153,7 +153,7 @@ app.put('/actualizar-negocio/:duenoId', (req, res) => {
         const dirId = results[0].direccion_id;
 
         // 2. Actualizar tabla Direcciones
-        db.query('UPDATE direcciones SET calle = ?, colonia = ?, referencia = ? WHERE id = ?', [calle, colonia, referencia, dirId], (err) => {
+        db.query('UPDATE direcciones SET calle = ?, colonia = ?, referencia = ?, latitud = ?, longitud = ? WHERE id = ?', [calle, colonia, referencia, latitud, longitud, dirId], (err) => {
             if (err) return res.status(500).json({ error: err.message });
             
             // 3. Actualizar tabla Negocios

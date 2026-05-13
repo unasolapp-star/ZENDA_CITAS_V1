@@ -6,6 +6,8 @@
     <title>Zenda - Mi Panel</title>
     <link rel="stylesheet" href="style-dash.css">
     <link rel="icon" href="/logo.png?v=2" type="image/png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         /* Estilos para los slots de horarios dinámicos */
         .slots-container { 
@@ -119,6 +121,11 @@
         <h2 id="modalBusinessName" style="color: #1e293b; margin-bottom: 15px;">Nombre del Negocio</h2>
         
         <div id="businessInfo"></div>
+
+        <div id="mapa-cliente-container" style="display: none; margin-bottom: 20px;">
+            <div id="mapa-cliente" style="height: 200px; width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; z-index: 1;"></div>
+            <a id="btnGoogleMaps" href="#" target="_blank" style="display: block; text-align: center; background: #22c55e; color: white; padding: 10px; border-radius: 8px; text-decoration: none; margin-top: 10px; font-weight: bold; transition: background 0.3s;">📍 Abrir ruta en Google Maps</a>
+        </div>
 
         <div class="booking-form">
             <label style="display: block; margin-bottom: 8px; font-weight: 600;">Selecciona la Fecha:</label>
