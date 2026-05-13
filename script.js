@@ -206,11 +206,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             window.location.href = data.rol === 'negocio' ? "dashboard-negocio.html" : "dashboard-cliente.html";
         } else {
             console.error("❌ El servidor rechazó el login:", data);
-            alert(data.error || "Credenciales incorrectas");
+            await customAlert(data.error || "Credenciales incorrectas", "#ef4444");
         }
     } catch (err) { 
         console.error("❌ Error de red o código:", err);
-        alert("Error de conexión con el servidor local. ¿Ejecutaste 'node server.js'?"); 
+        await customAlert("Error de conexión con el servidor local. ¿Ejecutaste 'node server.js'?", "#ef4444"); 
     }
 });
 
@@ -230,26 +230,32 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     // A. Validación de Email (solo gmail, outlook, hotmail sin importar mayúsculas)
     const emailRegex = /^[^\s@]+@(gmail\.com|outlook\.com|hotmail\.com)$/i;
     if (!emailRegex.test(emailValue)) {
-        return alert("El correo electrónico solo puede ser @gmail.com, @outlook.com o @hotmail.com");
+        await customAlert("El correo electrónico solo puede ser @gmail.com, @outlook.com o @hotmail.com", "#ef4444");
+        return;
     }
 
     // B. Validación de Teléfono (exactamente 10 dígitos)
     if (phoneValue.length !== 10) {
-        return alert("El número de teléfono debe tener exactamente 10 dígitos.");
+        await customAlert("El número de teléfono debe tener exactamente 10 dígitos.", "#ef4444");
+        return;
     }
 
     // C. Validación de Contraseña
     if (passValue.length < 9) {
-        return alert("La contraseña debe tener al menos 9 caracteres por seguridad.");
+        await customAlert("La contraseña debe tener al menos 9 caracteres por seguridad.", "#ef4444");
+        return;
     }
     if (!/[A-Z]/.test(passValue)) {
-        return alert("La contraseña debe contener al menos una letra mayúscula.");
+        await customAlert("La contraseña debe contener al menos una letra mayúscula.", "#ef4444");
+        return;
     }
     if (!/\d/.test(passValue)) {
-        return alert("La contraseña debe contener al menos un número (0-9).");
+        await customAlert("La contraseña debe contener al menos un número (0-9).", "#ef4444");
+        return;
     }
     if (!/[_\-\/&$]/.test(passValue)) {
-        return alert("La contraseña debe contener al menos un carácter especial válido como: _ - / & $");
+        await customAlert("La contraseña debe contener al menos un carácter especial válido como: _ - / & $", "#ef4444");
+        return;
     }
 
     const datos = {
@@ -268,14 +274,14 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         });
         
         if (res.ok) {
-            alert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
+            await customAlert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.", "#22c55e");
             toggleForms(); // Regresa al formulario de login automáticamente
         } else {
             const errorData = await res.json();
-            alert(errorData.error || "Error al registrar: El correo ya podría estar en uso.");
+            await customAlert(errorData.error || "Error al registrar: El correo ya podría estar en uso.", "#ef4444");
         }
     } catch (err) { 
-        alert("Error al registrar: ¿Está encendido el servidor Node.js?"); 
+        await customAlert("Error al registrar: ¿Está encendido el servidor Node.js?", "#ef4444"); 
     }
 });
 
@@ -287,4 +293,34 @@ function togglePassword(inputId) {
     } else if (input) {
         input.type = "password"; // La vuelve a ocultar
     }
+}
+
+// 8. ALERTA PERSONALIZADA
+function customAlert(mensaje, colorBoton = "#2563eb") {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000; backdrop-filter:blur(4px);";
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = "background:white; padding:25px; border-radius:12px; max-width:400px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); animation:slideDown 0.3s ease-out;";
+        
+        const icon = document.createElement('div');
+        icon.innerHTML = "ℹ️";
+        icon.style.cssText = "font-size:40px; margin-bottom:10px;";
+        
+        const texto = document.createElement('p');
+        texto.innerText = mensaje;
+        texto.style.cssText = "margin-bottom:20px; color:#1e293b; font-size:1.05rem; line-height:1.5;";
+        
+        const btnConfirm = document.createElement('button');
+        btnConfirm.innerText = "Aceptar";
+        btnConfirm.style.cssText = `padding:10px 15px; border:none; border-radius:8px; background:${colorBoton}; color:white; font-weight:bold; cursor:pointer; width:100%;`;
+        btnConfirm.onclick = () => { document.body.removeChild(overlay); resolve(); };
+        
+        modal.appendChild(icon);
+        modal.appendChild(texto);
+        modal.appendChild(btnConfirm);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+    });
 }

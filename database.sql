@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS `citas` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-USE `citas`;
+CREATE DATABASE IF NOT EXISTS `railway` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE `railway`;
 
 -- Primero eliminamos las tablas en orden inverso para evitar conflictos con las llaves foráneas
 DROP TABLE IF EXISTS `citas`;
@@ -23,9 +23,6 @@ CREATE TABLE `usuarios` (
 -- 2. Tabla de Direcciones (Normalización 3FN)
 CREATE TABLE `direcciones` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `calle` varchar(100) DEFAULT NULL,
-  `colonia` varchar(100) DEFAULT NULL,
-  `referencia` text,
   `latitud` decimal(10,8) DEFAULT NULL,
   `longitud` decimal(11,8) DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -83,8 +80,8 @@ INSERT INTO `usuarios` (`id`, `nombre`, `email`, `password`, `telefono`, `rol`) 
 (1, 'Noe de jesus cagal Ambrozio', 'shuashfuh@gmail.com', '$2b$10$Jsgus2PopJhL5TtzSeGygeo4co703H4zSQVdfcd4bnBY8bsK1DvtG', '12345678901', 'negocio'),
 (2, 'aLAN jONUHE fERNANDEZ aZAMAR', 'DJQAUIJD@gmail.com', '$2b$10$FiYD8z5DxeBqIB/qkmunxOEsh0H3D.YyWf32ArRrA0qEOSWHaydu6', '123456789012', 'cliente');
 
-INSERT INTO `direcciones` (`id`, `calle`, `colonia`, `referencia`, `latitud`, `longitud`) VALUES 
-(1, 'Jose giadans #14', 'Magda Morelo de carvajal', 'asas', 18.46222000, -95.30138000);
+INSERT INTO `direcciones` (`id`, `latitud`, `longitud`) VALUES 
+(1, 18.46222000, -95.30138000);
 
 INSERT INTO `negocios` (`id`, `dueno_id`, `direccion_id`, `nombre_negocio`, `categoria`, `telefono_negocio`, `logo_url`, `hora_apertura`, `hora_cierre`, `intervalo_minutos`) VALUES 
 (1, 1, 1, 'haka', 'Dentista', '24910296161', '', '10:00:00', '18:00:00', 30);

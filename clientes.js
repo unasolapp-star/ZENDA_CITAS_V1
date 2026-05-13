@@ -175,7 +175,7 @@ async function abrirModal(id) {
         slotsDiv.innerHTML = "<p style='color: #64748b;'>Selecciona una fecha primero</p>";
     } catch (err) {
         console.error("Error al obtener detalles:", err);
-        alert("No se pudieron cargar los detalles del negocio.");
+        await customAlert("No se pudieron cargar los detalles del negocio.", "#ef4444");
     }
 }
 
@@ -218,8 +218,9 @@ function mostrarSeccion(seccion) {
     const id = sessionStorage.getItem('userId');
     const role = sessionStorage.getItem('userRole');
     if (seccion === 'historial' && (!id || role === 'invitado')) {
-        alert("Debes iniciar sesión para ver tu historial de citas.");
-        window.location.href = 'index.html';
+        customAlert("Debes iniciar sesión para ver tu historial de citas.", "#ef4444").then(() => {
+            window.location.href = 'index.html';
+        });
         return;
     }
     document.getElementById('explorar-section').style.display = seccion === 'explorar' ? 'block' : 'none';
@@ -351,7 +352,7 @@ async function confirmarCita(hora) {
     
     // BLOQUEAR AGENDAMIENTO PARA INVITADOS
     if (!userId || sessionStorage.getItem('userRole') === 'invitado') {
-        alert("Debes iniciar sesión o crear una cuenta para poder agendar citas.");
+        await customAlert("Debes iniciar sesión o crear una cuenta para poder agendar citas.", "#ef4444");
         window.location.href = 'index.html';
         return;
     }
@@ -369,15 +370,15 @@ async function confirmarCita(hora) {
         });
 
         if (res.ok) {
-            alert("✅ Cita agendada correctamente.");
+            await customAlert("✅ Cita agendada correctamente.", "#22c55e");
             cerrarModal();
         } else {
             const error = await res.json();
-            alert("Error: " + (error.error || "No se pudo agendar."));
+            await customAlert("Error: " + (error.error || "No se pudo agendar."), "#ef4444");
             actualizarHorarios(); // Refrescar para ver si se ocupó el lugar
         }
     } catch (err) {
-        alert("Error de conexión con el servidor.");
+        await customAlert("Error de conexión con el servidor.", "#ef4444");
     }
 }
 
@@ -386,7 +387,7 @@ async function cancelarCita(id) {
     if(!confirmar) return;
     // Reutilizamos el endpoint genérico de cambio de estado
     const res = await fetch(`${API_URL}/citas/${id}/estado`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({estado: 'eliminada'}) });
-    if(res.ok) { alert("Cita cancelada."); cargarHistorial(); }
+    if(res.ok) { await customAlert("Cita cancelada.", "#22c55e"); cargarHistorial(); }
 }
 
 function cerrarModal() {
@@ -420,13 +421,12 @@ async function abrirPerfil() {
                     <p><b>Tipo de cuenta:</b> <span style="text-transform:capitalize;">${data.rol}</span></p>
                 </div>
                 <div style="border-top:1px solid #e2e8f0; padding-top:20px; text-align:center;">
-                    <p style="color:#ef4444; font-size:14px; margin-bottom:10px;">Zona de peligro</p>
                     <button onclick="eliminarCuenta()" style="background:#ef4444; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">🗑️ Eliminar mi cuenta</button>
                 </div>
             </div>
         `;
         modal.style.display = 'flex';
-    } catch (err) { alert("Error al cargar la información del perfil."); }
+    } catch (err) { await customAlert("Error al cargar la información del perfil.", "#ef4444"); }
 }
 
 // 8. MODAL DE CONFIRMACIÓN PERSONALIZADO
@@ -477,11 +477,41 @@ async function eliminarCuenta() {
     try {
         const res = await fetch(`${API_URL}/usuario/${id}`, { method: 'DELETE' });
         if (res.ok) {
-            alert("Cuenta eliminada exitosamente. Lamentamos verte partir.");
+            await customAlert("Cuenta eliminada exitosamente. Lamentamos verte partir.", "#22c55e");
             sessionStorage.clear();
             window.location.href = 'index.html';
-        } else { alert("Error al eliminar la cuenta."); }
-    } catch (err) { alert("Error de conexión al intentar eliminar la cuenta."); }
+        } else { await customAlert("Error al eliminar la cuenta.", "#ef4444"); }
+    } catch (err) { await customAlert("Error de conexión al intentar eliminar la cuenta.", "#ef4444"); }
+}
+
+// 9. ALERTA PERSONALIZADA
+function customAlert(mensaje, colorBoton = "#2563eb") {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000; backdrop-filter:blur(4px);";
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = "background:white; padding:25px; border-radius:12px; max-width:400px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); animation:slideDown 0.3s ease-out;";
+        
+        const icon = document.createElement('div');
+        icon.innerHTML = "ℹ️";
+        icon.style.cssText = "font-size:40px; margin-bottom:10px;";
+        
+        const texto = document.createElement('p');
+        texto.innerText = mensaje;
+        texto.style.cssText = "margin-bottom:20px; color:#1e293b; font-size:1.05rem; line-height:1.5;";
+        
+        const btnConfirm = document.createElement('button');
+        btnConfirm.innerText = "Aceptar";
+        btnConfirm.style.cssText = `padding:10px 15px; border:none; border-radius:8px; background:${colorBoton}; color:white; font-weight:bold; cursor:pointer; width:100%;`;
+        btnConfirm.onclick = () => { document.body.removeChild(overlay); resolve(); };
+        
+        modal.appendChild(icon);
+        modal.appendChild(texto);
+        modal.appendChild(btnConfirm);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+    });
 }
 
 // INICIO ÚNICO

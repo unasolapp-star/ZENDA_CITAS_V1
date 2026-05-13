@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zenda - Panel de Negocio</title>
+    <title>Zenda - Configuración del Negocio</title>
     <link rel="stylesheet" href="style-dash.css">
     <link rel="icon" href="/logo.png?v=2" type="image/png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -80,7 +80,7 @@
 </head>
 <body>
 <header>
-    <h1>Zenda Santiago Tuxtla</h1>
+    <h1>Zenda - Negocio</h1>
     <div style="display: flex; align-items: center; gap: 20px;">
         <span id="userNameDisplay" style="font-weight: bold; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px;">👤 Cargando...</span>
         <button onclick="localStorage.clear(); location.href='index.html'" style="background: #ef4444; border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer;">Cerrar Sesión</button>
@@ -105,12 +105,6 @@
                 <option value="Estética">Estética</option>
             </select>
 
-            <label>Dirección (Calle y Número):</label>
-            <input type="text" id="bizStreet" placeholder="Ej. Calle Real #123">
-            
-            <label>Colonia/Barrio:</label>
-            <input type="text" id="bizNeighborhood" placeholder="Ej. Barrio de San José">
-
             <div class="time-group">
                 <div>
                     <label>Abre a las:</label>
@@ -130,9 +124,6 @@
                 <option value="90">1 hora y media</option>
                 <option value="120">2 horas</option>
             </select>
-            
-            <label>Referencia de ubicación:</label>
-            <textarea id="bizRef" placeholder="Ej. Frente al parque central, local color azul"></textarea>
             
             <label>Ubicación exacta en el mapa (Arrastra el pin rojo a tu local):</label>
             <div id="mapa-negocio" style="height: 300px; width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; z-index: 1;"></div>
