@@ -134,8 +134,6 @@ async function abrirModal(id) {
         document.getElementById('modalBusinessName').innerText = n.nombre_negocio;
         document.getElementById('businessInfo').innerHTML = `
             <p>📞 <b>Tel:</b> ${n.telefono_negocio || 'No disponible'}</p>
-            <p>🏠 <b>Dirección:</b> ${n.calle || 'S/N'}, Col. ${n.colonia || 'S/C'}</p>
-            <p>📝 <b>Ref:</b> ${n.referencia || 'Sin referencias'}</p>
             <p>📅 <b>Días de atención:</b> ${obtenerDiasTexto(n.dias_habiles)}</p>
         `;
 
@@ -184,18 +182,46 @@ async function abrirModal(id) {
 // 3. Mostrar nombre en el header
 async function mostrarNombreUsuario() {
     const id = sessionStorage.getItem('userId');
+    const role = sessionStorage.getItem('userRole');
     const display = document.getElementById('userNameDisplay');
-    if (!id || !display) return;
+    if (!display) return;
+
+    // SI ES INVITADO, MODIFICAR HEADER PARA PEDIR INICIO DE SESIÓN
+    if (!id || role === 'invitado') {
+        display.innerText = "Iniciar sesión / Crear cuenta";
+        display.style.cursor = 'pointer';
+        display.style.backgroundColor = '#2563eb';
+        display.style.color = 'white';
+        display.title = 'Ir al login';
+        display.onclick = () => window.location.href = 'index.html';
+        
+        // Ocultar botón de cerrar sesión si se encuentra al lado
+        const btnLogout = display.nextElementSibling;
+        if (btnLogout && btnLogout.tagName === 'BUTTON') btnLogout.style.display = 'none';
+        return;
+    }
 
     try {
         const res = await fetch(`${API_URL}/usuario-nombre/${id}`);
         const data = await res.json();
-        if (data.nombre) display.innerText = `👤 ${data.nombre}`;
+        if (data.nombre) {
+            display.innerText = `👤 ${data.nombre}`;
+            display.style.cursor = 'pointer';
+            display.title = 'Ver mi perfil';
+            display.onclick = abrirPerfil;
+        }
     } catch (err) { display.innerText = "Usuario"; }
 }
 
 // 4. Gestión de Secciones
 function mostrarSeccion(seccion) {
+    const id = sessionStorage.getItem('userId');
+    const role = sessionStorage.getItem('userRole');
+    if (seccion === 'historial' && (!id || role === 'invitado')) {
+        alert("Debes iniciar sesión para ver tu historial de citas.");
+        window.location.href = 'index.html';
+        return;
+    }
     document.getElementById('explorar-section').style.display = seccion === 'explorar' ? 'block' : 'none';
     document.getElementById('historial-section').style.display = seccion === 'historial' ? 'block' : 'none';
     if(seccion === 'historial') cargarHistorial();
@@ -322,9 +348,18 @@ async function actualizarHorarios() {
 async function confirmarCita(hora) {
     const bizId = document.getElementById('calendarModal').dataset.bizId;
     const userId = sessionStorage.getItem('userId');
+    
+    // BLOQUEAR AGENDAMIENTO PARA INVITADOS
+    if (!userId || sessionStorage.getItem('userRole') === 'invitado') {
+        alert("Debes iniciar sesión o crear una cuenta para poder agendar citas.");
+        window.location.href = 'index.html';
+        return;
+    }
+
     const fecha = document.getElementById('appointmentDate').value;
 
-    if (!confirm(`¿Confirmar tu cita para las ${hora}?`)) return;
+    const confirmar = await customConfirm(`¿Confirmar tu cita para las ${hora}?`, "Confirmar", "#22c55e");
+    if (!confirmar) return;
 
     try {
         const res = await fetch(`${API_URL}/citas`, {
@@ -347,7 +382,8 @@ async function confirmarCita(hora) {
 }
 
 async function cancelarCita(id) {
-    if(!confirm("¿Deseas cancelar esta cita? (Pasará a estado eliminada)")) return;
+    const confirmar = await customConfirm("¿Deseas cancelar esta cita? (Pasará a estado eliminada)", "Cancelar cita", "#ef4444");
+    if(!confirmar) return;
     // Reutilizamos el endpoint genérico de cambio de estado
     const res = await fetch(`${API_URL}/citas/${id}/estado`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({estado: 'eliminada'}) });
     if(res.ok) { alert("Cita cancelada."); cargarHistorial(); }
@@ -355,6 +391,97 @@ async function cancelarCita(id) {
 
 function cerrarModal() {
     document.getElementById('calendarModal').style.display = 'none';
+}
+
+// 7. GESTIÓN DE PERFIL Y CUENTA
+async function abrirPerfil() {
+    const id = sessionStorage.getItem('userId');
+    if (!id) return;
+    try {
+        const res = await fetch(`${API_URL}/usuario/${id}`);
+        const data = await res.json();
+        
+        let modal = document.getElementById('perfilModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'perfilModal';
+            modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:9999;";
+            document.body.appendChild(modal);
+        }
+        
+        modal.innerHTML = `
+            <div style="background:white; padding:30px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.2); position:relative;">
+                <button onclick="document.getElementById('perfilModal').style.display='none'" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
+                <h2 style="margin-top:0; color:#1e293b;">Mi Perfil</h2>
+                <div style="margin-bottom:20px; color:#475569; line-height:1.6;">
+                    <p><b>Nombre:</b> ${data.nombre}</p>
+                    <p><b>Email:</b> ${data.email}</p>
+                    <p><b>Teléfono:</b> ${data.telefono || 'No registrado'}</p>
+                    <p><b>Tipo de cuenta:</b> <span style="text-transform:capitalize;">${data.rol}</span></p>
+                </div>
+                <div style="border-top:1px solid #e2e8f0; padding-top:20px; text-align:center;">
+                    <p style="color:#ef4444; font-size:14px; margin-bottom:10px;">Zona de peligro</p>
+                    <button onclick="eliminarCuenta()" style="background:#ef4444; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">🗑️ Eliminar mi cuenta</button>
+                </div>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    } catch (err) { alert("Error al cargar la información del perfil."); }
+}
+
+// 8. MODAL DE CONFIRMACIÓN PERSONALIZADO
+function customConfirm(mensaje, textoConfirmar = "Sí, continuar", colorConfirmar = "#ef4444") {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:10000; backdrop-filter:blur(4px);";
+        
+        const modal = document.createElement('div');
+        modal.style.cssText = "background:white; padding:25px; border-radius:12px; max-width:400px; width:90%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); animation:slideDown 0.3s ease-out;";
+        
+        const icon = document.createElement('div');
+        icon.innerHTML = "⚠️";
+        icon.style.cssText = "font-size:40px; margin-bottom:10px;";
+        
+        const texto = document.createElement('p');
+        texto.innerText = mensaje;
+        texto.style.cssText = "margin-bottom:20px; color:#1e293b; font-size:1.05rem; line-height:1.5;";
+        
+        const btnContainer = document.createElement('div');
+        btnContainer.style.cssText = "display:flex; justify-content:center; gap:10px;";
+        
+        const btnCancel = document.createElement('button');
+        btnCancel.innerText = "Cancelar";
+        btnCancel.style.cssText = "padding:10px 15px; border:none; border-radius:8px; background:#e2e8f0; color:#475569; font-weight:bold; cursor:pointer; flex:1;";
+        btnCancel.onclick = () => { document.body.removeChild(overlay); resolve(false); };
+        
+        const btnConfirm = document.createElement('button');
+        btnConfirm.innerText = textoConfirmar;
+        btnConfirm.style.cssText = `padding:10px 15px; border:none; border-radius:8px; background:${colorConfirmar}; color:white; font-weight:bold; cursor:pointer; flex:1;`;
+        btnConfirm.onclick = () => { document.body.removeChild(overlay); resolve(true); };
+        
+        btnContainer.appendChild(btnCancel);
+        btnContainer.appendChild(btnConfirm);
+        modal.appendChild(icon);
+        modal.appendChild(texto);
+        modal.appendChild(btnContainer);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+    });
+}
+
+async function eliminarCuenta() {
+    const confirmar = await customConfirm("¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer y perderás el registro de tus citas.", "Eliminar cuenta", "#ef4444");
+    if (!confirmar) return;
+    
+    const id = sessionStorage.getItem('userId');
+    try {
+        const res = await fetch(`${API_URL}/usuario/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            alert("Cuenta eliminada exitosamente. Lamentamos verte partir.");
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        } else { alert("Error al eliminar la cuenta."); }
+    } catch (err) { alert("Error de conexión al intentar eliminar la cuenta."); }
 }
 
 // INICIO ÚNICO

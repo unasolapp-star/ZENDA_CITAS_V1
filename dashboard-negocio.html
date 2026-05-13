@@ -95,7 +95,7 @@
             <input type="text" id="bizName" placeholder="Nombre del Negocio" required>
             
             <label>Teléfono del Negocio:</label>
-            <input type="tel" id="bizPhone" placeholder="Teléfono de contacto" required>
+            <input type="tel" id="bizPhone" placeholder="Teléfono de contacto" maxlength="10" required>
             
             <label>Categoría:</label>
             <select id="bizCategory">
@@ -137,7 +137,7 @@
             <label>Ubicación exacta en el mapa (Arrastra el pin rojo a tu local):</label>
             <div id="mapa-negocio" style="height: 300px; width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; z-index: 1;"></div>
 
-            <button type="submit" class="btn-save">💾 Guardar Cambios</button>
+            <button type="button" class="btn-save" id="btnToggleEdit" style="background-color: #475569;">⚙️ Modificar datos del negocio</button>
         </form>
     </section>
 

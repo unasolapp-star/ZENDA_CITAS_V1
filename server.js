@@ -51,7 +51,7 @@ app.post('/register', async (req, res) => {
             
             if (rol === 'negocio') {
                 // 1. Crea dirección vacía 2. Vincula dirección al negocio
-                db.query('INSERT INTO direcciones (calle, colonia, referencia) VALUES ("", "", "")', (err, dirResult) => {
+                db.query('INSERT INTO direcciones (latitud, longitud) VALUES (NULL, NULL)', (err, dirResult) => {
                     if (!err) {
                         db.query('INSERT INTO negocios (dueno_id, direccion_id, nombre_negocio, hora_apertura, hora_cierre, intervalo_minutos) VALUES (?, ?, ?, "09:00:00", "18:00:00", 60)', 
                         [result.insertId, dirResult.insertId, nombre]);
@@ -91,7 +91,7 @@ app.get('/negocios', (req, res) => {
     const categoria = req.query.categoria || 'Todas';
 
     let countQuery = 'SELECT COUNT(*) as total FROM negocios n';
-    let dataQuery = 'SELECT n.*, d.calle, d.colonia, d.referencia, d.latitud, d.longitud FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id';
+    let dataQuery = 'SELECT n.*, d.latitud, d.longitud FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id';
     let queryParams = [];
 
     if (categoria !== 'Todas') {
@@ -122,7 +122,7 @@ app.get('/categorias', (req, res) => {
 });
 
 app.get('/mi-negocio/:duenoId', (req, res) => {
-    const q = `SELECT n.*, d.calle, d.colonia, d.referencia, d.latitud, d.longitud,
+    const q = `SELECT n.*, d.latitud, d.longitud,
                (SELECT GROUP_CONCAT(dia_semana) FROM negocios_dias WHERE negocio_id = n.id) as dias_habiles 
                FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id WHERE n.dueno_id = ?`;
     db.query(q, [req.params.duenoId], (err, results) => {
@@ -132,7 +132,7 @@ app.get('/mi-negocio/:duenoId', (req, res) => {
 });
 
 app.get('/mi-negocio-detalles/:id', (req, res) => {
-    const q = `SELECT n.*, d.calle, d.colonia, d.referencia, d.latitud, d.longitud,
+    const q = `SELECT n.*, d.latitud, d.longitud,
                (SELECT GROUP_CONCAT(dia_semana) FROM negocios_dias WHERE negocio_id = n.id) as dias_habiles 
                FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id WHERE n.id = ?`;
     db.query(q, [req.params.id], (err, results) => {
@@ -143,7 +143,7 @@ app.get('/mi-negocio-detalles/:id', (req, res) => {
 
 // Actualización completa normalizada
 app.put('/actualizar-negocio/:duenoId', (req, res) => {
-    const { nombre_negocio, telefono_negocio, categoria, calle, colonia, referencia, latitud, longitud, hora_apertura, hora_cierre, intervalo_minutos, dias_habiles } = req.body;
+    const { nombre_negocio, telefono_negocio, categoria, latitud, longitud, hora_apertura, hora_cierre, intervalo_minutos, dias_habiles } = req.body;
     
     // 1. Encontrar IDs involucrados
     db.query('SELECT id, direccion_id FROM negocios WHERE dueno_id = ?', [req.params.duenoId], (err, results) => {
@@ -153,7 +153,7 @@ app.put('/actualizar-negocio/:duenoId', (req, res) => {
         const dirId = results[0].direccion_id;
 
         // 2. Actualizar tabla Direcciones
-        db.query('UPDATE direcciones SET calle = ?, colonia = ?, referencia = ?, latitud = ?, longitud = ? WHERE id = ?', [calle, colonia, referencia, latitud, longitud, dirId], (err) => {
+        db.query('UPDATE direcciones SET latitud = ?, longitud = ? WHERE id = ?', [latitud, longitud, dirId], (err) => {
             if (err) return res.status(500).json({ error: err.message });
             
             // 3. Actualizar tabla Negocios
@@ -362,6 +362,23 @@ app.get('/usuario-nombre/:id', (req, res) => {
         if (err) return res.status(500).json({ error: "Error de servidor" });
         if (results.length === 0) return res.status(404).json({ error: "No encontrado" });
         res.json({ nombre: results[0].nombre });
+    });
+});
+
+// OBTENER TODOS LOS DATOS DEL PERFIL (EXCEPTO CONTRASEÑA)
+app.get('/usuario/:id', (req, res) => {
+    db.query('SELECT nombre, email, telefono, rol FROM usuarios WHERE id = ?', [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: "Error de servidor" });
+        if (results.length === 0) return res.status(404).json({ error: "Usuario no encontrado" });
+        res.json(results[0]);
+    });
+});
+
+// ELIMINAR USUARIO (ON DELETE CASCADE BORRARÁ NEGOCIOS Y CITAS AUTOMÁTICAMENTE)
+app.delete('/usuario/:id', (req, res) => {
+    db.query('DELETE FROM usuarios WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: "Error al eliminar usuario" });
+        res.json({ success: true });
     });
 });
 

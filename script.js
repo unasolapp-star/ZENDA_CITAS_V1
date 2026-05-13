@@ -16,6 +16,13 @@ function toggleForms() {
     }
 }
 
+// 1.5 FUNCIÓN PARA CONTINUAR COMO INVITADO
+function continuarComoInvitado() {
+    sessionStorage.removeItem('userId'); // Nos aseguramos de que no haya un ID de cuenta
+    sessionStorage.setItem('userRole', 'invitado'); // Asignamos el rol temporal
+    window.location.href = 'dashboard-cliente.html';
+}
+
 // 2. SEGUIMIENTO VISUAL Y ANIMACIONES 3D
 const mascots = document.querySelectorAll('.mascot-animator');
 const pupils = document.querySelectorAll('.pupil');
@@ -271,3 +278,13 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         alert("Error al registrar: ¿Está encendido el servidor Node.js?"); 
     }
 });
+
+// 7. FUNCIÓN PARA MOSTRAR / OCULTAR CONTRASEÑA
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    if (input && input.type === "password") {
+        input.type = "text"; // Muestra la contraseña
+    } else if (input) {
+        input.type = "password"; // La vuelve a ocultar
+    }
+}
