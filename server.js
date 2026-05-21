@@ -11,7 +11,6 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const nodemailer = require('nodemailer');
 const app = express();
 
 app.use(cors());
@@ -45,28 +44,18 @@ db.getConnection((err, connection) => {
 // 1.5 CONFIGURACIÓN DE CORREO Y MEMORIA TEMPORAL
 const registrosPendientes = new Map();
 
-// ¡AQUÍ PONES TUS DATOS!
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 465,
-    secure: true, // true para el puerto 465
-    auth: {
-        user: process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com', // Tu correo con el que te registraste en Brevo
-        pass: process.env.EMAIL_PASS // La contraseña se leerá de las variables de entorno de Railway o tu archivo .env local
-    },
-    tls: { rejectUnauthorized: false },
-    connectionTimeout: 10000, // Aumentamos a 10 segundos el límite
-    greetingTimeout: 10000,
-    socketTimeout: 10000
-});
-
 // VERIFICADOR AUTOMÁTICO DE CONEXIÓN CON BREVO
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("⚠️ ERROR DE CONEXIÓN CON BREVO:", error.message);
+fetch('https://api.brevo.com/v3/account', {
+    method: 'GET',
+    headers: { 'api-key': process.env.EMAIL_PASS || '' }
+}).then(async (res) => {
+    if (res.ok) {
+        console.log("✅ Conexión exitosa con API de Brevo. El servidor puede enviar correos.");
     } else {
-        console.log("✅ Conexión exitosa con Brevo. El servidor puede enviar correos.");
+        console.error("⚠️ ERROR DE CONEXIÓN CON BREVO API: Clave inválida o faltante.");
     }
+}).catch(err => {
+    console.error("⚠️ ERROR DE RED CON BREVO API:", err.message);
 });
 
 // RUTA PARA GENERAR Y ENVIAR EL CÓDIGO REAL
@@ -83,22 +72,33 @@ app.post('/enviar-codigo', async (req, res) => {
         const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutos de validez
         registrosPendientes.set(email, { codigo, expiresAt });
 
-        const mailOptions = {
-            from: '"Equipo Zenda" <' + (process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com') + '>', // <--- REEMPLAZA AQUÍ TAMBIÉN
-            to: email,
-            subject: 'Tu código de verificación de Zenda',
-            html: `
-                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; color: #1e293b;">
-                    <h2 style="color: #2563eb;">¡Bienvenido a Zenda!</h2>
-                    <p>Tu código de verificación seguro es:</p>
-                    <h1 style="background: #f1f5f9; padding: 15px; border-radius: 10px; letter-spacing: 5px; font-size: 32px; display: inline-block;">${codigo}</h1>
-                    <p>Ingrésalo en la plataforma para continuar con tu registro.</p>
-                </div>
-            `
-        };
+        const htmlContent = `
+            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; color: #1e293b;">
+                <h2 style="color: #2563eb;">¡Bienvenido a Zenda!</h2>
+                <p>Tu código de verificación seguro es:</p>
+                <h1 style="background: #f1f5f9; padding: 15px; border-radius: 10px; letter-spacing: 5px; font-size: 32px; display: inline-block;">${codigo}</h1>
+                <p>Ingrésalo en la plataforma para continuar con tu registro.</p>
+            </div>
+        `;
 
         try {
-            await transporter.sendMail(mailOptions);
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': process.env.EMAIL_PASS || '',
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: "Equipo Zenda", email: process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com' },
+                    to: [{ email: email }],
+                    subject: 'Tu código de verificación de Zenda',
+                    htmlContent: htmlContent
+                })
+            });
+            
+            if (!response.ok) throw new Error("Brevo API rechazó la solicitud");
+
             console.log(`📧 Correo real enviado a: ${email}`);
             res.status(200).json({ success: true, message: "Código enviado exitosamente" });
         } catch (error) {
