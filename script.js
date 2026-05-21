@@ -258,7 +258,8 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         return;
     }
 
-    const datos = {
+    // Guardamos los datos temporalmente en una variable global
+    window.datosRegistroTemporal = {
         nombre: document.getElementById('regName').value,
         email: emailValue,
         telefono: phoneValue,
@@ -267,21 +268,56 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     };
 
     try {
-        const res = await fetch(`${API_URL}/register`, {
+        // PRIMERO SOLICITAMOS EL CÓDIGO
+        const res = await fetch(`${API_URL}/enviar-codigo`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datos)
+            body: JSON.stringify({ email: emailValue })
         });
         
         if (res.ok) {
-            await customAlert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.", "#22c55e");
-            toggleForms(); // Regresa al formulario de login automáticamente
+            // Mostramos la ventana emergente para que escriba el código
+            document.getElementById('verificationModal').style.display = 'block';
+            document.getElementById('verificationCode').value = '';
         } else {
             const errorData = await res.json();
-            await customAlert(errorData.error || "Error al registrar: El correo ya podría estar en uso.", "#ef4444");
+            await customAlert(errorData.error || "Error al enviar el código de verificación.", "#ef4444");
         }
     } catch (err) { 
-        await customAlert("Error al registrar: ¿Está encendido el servidor Node.js?", "#ef4444"); 
+        await customAlert("Error al solicitar el código: ¿Está encendido el servidor Node.js?", "#ef4444"); 
+    }
+});
+
+// 6.5 MANEJO DEL BOTÓN PARA VERIFICAR EL CÓDIGO Y REGISTRAR
+document.getElementById('btnVerifyCode').addEventListener('click', async () => {
+    const codigo = document.getElementById('verificationCode').value;
+    
+    if (codigo.length !== 7) {
+        await customAlert("El código debe tener exactamente 7 dígitos.", "#ef4444");
+        return;
+    }
+
+    // Unimos los datos del registro que guardamos antes, con el código escrito
+    const datosFinales = { ...window.datosRegistroTemporal, codigo };
+
+    try {
+        const res = await fetch(`${API_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datosFinales)
+        });
+        
+        if (res.ok) {
+            document.getElementById('verificationModal').style.display = 'none';
+            await customAlert("¡Cuenta verificada y creada con éxito! Ahora puedes iniciar sesión.", "#22c55e");
+            document.getElementById('registerForm').reset(); // Limpia el formulario base
+            toggleForms(); // Regresa al login
+        } else {
+            const errorData = await res.json();
+            await customAlert(errorData.error || "Código incorrecto o expirado.", "#ef4444");
+        }
+    } catch (err) { 
+        await customAlert("Error de conexión al registrar cuenta.", "#ef4444"); 
     }
 });
 

@@ -6,6 +6,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const nodemailer = require('nodemailer');
 const app = express();
 
 app.use(cors());
@@ -36,9 +37,56 @@ db.getConnection((err, connection) => {
     connection.release();
 });
 
+// 1.5 CONFIGURACIÓN DE CORREO Y MEMORIA TEMPORAL
+const registrosPendientes = new Map();
+
+// ¡AQUÍ PONES TUS DATOS!
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com', // <--- REEMPLAZA AQUÍ
+        pass: process.env.EMAIL_PASS || 'ooehwkqasfeqxjqm' // <--- REEMPLAZA AQUÍ (Sin espacios)
+    }
+});
+
+// RUTA PARA GENERAR Y ENVIAR EL CÓDIGO REAL
+app.post('/enviar-codigo', async (req, res) => {
+    const { email } = req.body;
+    const codigo = Math.floor(1000000 + Math.random() * 9000000).toString();
+    registrosPendientes.set(email, codigo);
+
+    const mailOptions = {
+        from: '"Equipo Zenda" <' + (process.env.EMAIL_USER || 'TU_CORREO_AQUI@gmail.com') + '>', // <--- REEMPLAZA AQUÍ TAMBIÉN
+        to: email,
+        subject: 'Tu código de verificación de Zenda',
+        html: `
+            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; color: #1e293b;">
+                <h2 style="color: #2563eb;">¡Bienvenido a Zenda!</h2>
+                <p>Tu código de verificación seguro es:</p>
+                <h1 style="background: #f1f5f9; padding: 15px; border-radius: 10px; letter-spacing: 5px; font-size: 32px; display: inline-block;">${codigo}</h1>
+                <p>Ingrésalo en la plataforma para continuar con tu registro.</p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`📧 Correo real enviado a: ${email}`);
+        res.status(200).json({ success: true, message: "Código enviado exitosamente" });
+    } catch (error) {
+        console.error("❌ Error enviando correo:", error);
+        res.status(500).json({ error: "Error al enviar el correo electrónico" });
+    }
+});
+
 // 2. RUTA DE REGISTRO
 app.post('/register', async (req, res) => {
-    const { nombre, email, password, rol, telefono } = req.body;
+    const { nombre, email, password, rol, telefono, codigo } = req.body;
+
+    // Validar que el código coincida
+    const codigoGuardado = registrosPendientes.get(email);
+    if (!codigoGuardado || codigoGuardado !== codigo) return res.status(400).json({ error: "Código incorrecto o expirado" });
+
     try {
         const hashedPass = await bcrypt.hash(password, 10);
         const query = 'INSERT INTO usuarios (nombre, email, password, rol, telefono) VALUES (?, ?, ?, ?, ?)';
@@ -49,6 +97,9 @@ app.post('/register', async (req, res) => {
                 return res.status(400).json({ error: err.code === 'ER_DUP_ENTRY' ? "El correo ya existe" : "Error al registrar en la base de datos" });
             }
             
+            // Si el registro fue un éxito, borramos el código de la memoria
+            registrosPendientes.delete(email);
+
             if (rol === 'negocio') {
                 // 1. Crea dirección vacía 2. Vincula dirección al negocio
                 db.query('INSERT INTO direcciones (latitud, longitud) VALUES (NULL, NULL)', (err, dirResult) => {
