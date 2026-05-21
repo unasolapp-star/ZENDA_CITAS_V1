@@ -53,7 +53,8 @@ const transporter = nodemailer.createTransport({
 app.post('/enviar-codigo', async (req, res) => {
     const { email } = req.body;
     const codigo = Math.floor(1000000 + Math.random() * 9000000).toString();
-    registrosPendientes.set(email, codigo);
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutos de validez
+    registrosPendientes.set(email, { codigo, expiresAt });
 
     const mailOptions = {
         from: '"Equipo Zenda" <' + (process.env.EMAIL_USER || 'TU_CORREO_AQUI@gmail.com') + '>', // <--- REEMPLAZA AQUÍ TAMBIÉN
@@ -84,8 +85,15 @@ app.post('/register', async (req, res) => {
     const { nombre, email, password, rol, telefono, codigo } = req.body;
 
     // Validar que el código coincida
-    const codigoGuardado = registrosPendientes.get(email);
-    if (!codigoGuardado || codigoGuardado !== codigo) return res.status(400).json({ error: "Código incorrecto o expirado" });
+    const registro = registrosPendientes.get(email);
+    if (!registro) return res.status(400).json({ error: "Código incorrecto o no solicitado" });
+
+    if (Date.now() > registro.expiresAt) {
+        registrosPendientes.delete(email);
+        return res.status(400).json({ error: "El código ha expirado (pasaron 5 minutos). Solicita uno nuevo." });
+    }
+
+    if (registro.codigo !== codigo) return res.status(400).json({ error: "Código de verificación incorrecto" });
 
     try {
         const hashedPass = await bcrypt.hash(password, 10);

@@ -124,10 +124,15 @@
                 <h2 style="margin-top: 0; color: #1e293b; font-size: 1.5rem;">Verifica tu correo</h2>
                 <p style="color: #475569; margin-bottom: 15px; font-size: 0.95rem; line-height: 1.5;">Hemos enviado un código a tu correo electrónico. Ingrésalo para crear tu cuenta.</p>
                 
-                <input type="text" id="verificationCode" placeholder="Ej: 1234567" maxlength="7" style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 20px; text-align: center; letter-spacing: 5px; margin-bottom: 20px; font-weight: bold; outline-color: #2563eb;">
+                <input type="text" id="verificationCode" placeholder="Ej: 1234567" maxlength="7" style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 20px; text-align: center; letter-spacing: 5px; margin-bottom: 10px; font-weight: bold; outline-color: #2563eb;">
                 
+                <div style="margin-bottom: 20px; font-size: 0.9rem; color: #64748b;">
+                    <span id="timerDisplay" style="font-weight: 600;">Expira en: 05:00</span> | 
+                    <a id="resendCodeBtn" style="color: #2563eb; font-weight: bold; cursor: pointer; text-decoration: none; transition: 0.2s;">Reenviar código</a>
+                </div>
+
                 <div style="display: flex; gap: 10px;">
-                    <button type="button" onclick="document.getElementById('verificationModal').style.display='none'" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #e2e8f0; color: #475569; font-weight: bold; cursor: pointer; transition: 0.3s;">Cancelar</button>
+                    <button type="button" onclick="document.getElementById('verificationModal').style.display='none'; if(window.countdownInterval) clearInterval(window.countdownInterval);" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #e2e8f0; color: #475569; font-weight: bold; cursor: pointer; transition: 0.3s;">Cancelar</button>
                     <button type="button" id="btnVerifyCode" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: #2563eb; color: white; font-weight: bold; cursor: pointer; transition: 0.3s;">Verificar</button>
                 </div>
             </div>

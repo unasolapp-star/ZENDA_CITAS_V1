@@ -267,6 +267,13 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         rol: document.getElementById('regRole').value
     };
 
+    // CAMBIO VISUAL: Mostrar al usuario que está cargando
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
+    const textoOriginal = btnSubmit.innerText;
+    btnSubmit.innerText = "⏳ Enviando código (espere un momento)...";
+    btnSubmit.disabled = true;
+    btnSubmit.style.opacity = "0.7";
+
     try {
         // PRIMERO SOLICITAMOS EL CÓDIGO
         const res = await fetch(`${API_URL}/enviar-codigo`, {
@@ -279,12 +286,74 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             // Mostramos la ventana emergente para que escriba el código
             document.getElementById('verificationModal').style.display = 'block';
             document.getElementById('verificationCode').value = '';
+            iniciarTemporizador();
         } else {
             const errorData = await res.json();
             await customAlert(errorData.error || "Error al enviar el código de verificación.", "#ef4444");
         }
     } catch (err) { 
         await customAlert("Error al solicitar el código: ¿Está encendido el servidor Node.js?", "#ef4444"); 
+    } finally {
+        // Restaurar el botón a la normalidad pase lo que pase
+        btnSubmit.innerText = textoOriginal;
+        btnSubmit.disabled = false;
+        btnSubmit.style.opacity = "1";
+    }
+});
+
+// 6.1 LÓGICA DEL TEMPORIZADOR Y REENVÍO DE CÓDIGO
+window.countdownInterval = null;
+
+function iniciarTemporizador() {
+    if (window.countdownInterval) clearInterval(window.countdownInterval);
+    let timeLeft = 3 * 60; // 3 minutos
+    const timerDisplay = document.getElementById('timerDisplay');
+    
+    window.countdownInterval = setInterval(() => {
+        timeLeft--;
+        const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const s = (timeLeft % 60).toString().padStart(2, '0');
+        timerDisplay.innerText = `Expira en: ${m}:${s}`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(window.countdownInterval);
+            timerDisplay.innerText = "Código expirado";
+            timerDisplay.style.color = "#ef4444";
+        } else {
+            timerDisplay.style.color = "#64748b";
+        }
+    }, 1000);
+}
+
+document.getElementById('resendCodeBtn').addEventListener('click', async () => {
+    const emailValue = window.datosRegistroTemporal?.email;
+    if (!emailValue) return;
+
+    const btnResend = document.getElementById('resendCodeBtn');
+    const originalText = btnResend.innerText;
+    btnResend.innerText = "Enviando...";
+    btnResend.style.pointerEvents = "none";
+
+    try {
+        const res = await fetch(`${API_URL}/enviar-codigo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailValue })
+        });
+        
+        if (res.ok) {
+            await customAlert("✅ Se ha enviado un nuevo código a tu correo.", "#22c55e");
+            iniciarTemporizador(); // Reinicia la cuenta a los 5 minutos de nuevo
+            document.getElementById('verificationCode').value = '';
+        } else {
+            const errorData = await res.json();
+            await customAlert(errorData.error || "Error al reenviar el código.", "#ef4444");
+        }
+    } catch (err) {
+        await customAlert("Error de conexión al reenviar.", "#ef4444");
+    } finally {
+        btnResend.innerText = originalText;
+        btnResend.style.pointerEvents = "auto";
     }
 });
 
@@ -300,6 +369,13 @@ document.getElementById('btnVerifyCode').addEventListener('click', async () => {
     // Unimos los datos del registro que guardamos antes, con el código escrito
     const datosFinales = { ...window.datosRegistroTemporal, codigo };
 
+    // CAMBIO VISUAL: Mostrar estado de carga en el botón del modal
+    const btnVerify = document.getElementById('btnVerifyCode');
+    const textoOriginal = btnVerify.innerText;
+    btnVerify.innerText = "⏳ Verificando...";
+    btnVerify.disabled = true;
+    btnVerify.style.opacity = "0.7";
+
     try {
         const res = await fetch(`${API_URL}/register`, {
             method: 'POST',
@@ -308,6 +384,7 @@ document.getElementById('btnVerifyCode').addEventListener('click', async () => {
         });
         
         if (res.ok) {
+            if (window.countdownInterval) clearInterval(window.countdownInterval); // Limpia si fue éxito
             document.getElementById('verificationModal').style.display = 'none';
             await customAlert("¡Cuenta verificada y creada con éxito! Ahora puedes iniciar sesión.", "#22c55e");
             document.getElementById('registerForm').reset(); // Limpia el formulario base
@@ -318,6 +395,10 @@ document.getElementById('btnVerifyCode').addEventListener('click', async () => {
         }
     } catch (err) { 
         await customAlert("Error de conexión al registrar cuenta.", "#ef4444"); 
+    } finally {
+        btnVerify.innerText = textoOriginal;
+        btnVerify.disabled = false;
+        btnVerify.style.opacity = "1";
     }
 });
 
