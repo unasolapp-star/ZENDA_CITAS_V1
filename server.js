@@ -1,4 +1,8 @@
-require('dotenv').config();
+try {
+    require('dotenv').config();
+} catch (error) {
+    console.log("dotenv no encontrado, usando variables de entorno nativas (modo producción).");
+}
 const mysql = require('mysql2');
 const express = require('express');
 const cors = require('cors');
