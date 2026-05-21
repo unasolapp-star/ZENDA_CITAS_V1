@@ -48,13 +48,16 @@ const registrosPendientes = new Map();
 // ¡AQUÍ PONES TUS DATOS!
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false, // false para el puerto 587 (utiliza STARTTLS)
     auth: {
         user: process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com', // <--- REEMPLAZA AQUÍ
         pass: process.env.EMAIL_PASS || 'frzrmwvcapayuuyh' // <--- REEMPLAZA AQUÍ (Sin espacios)
     },
-    tls: { rejectUnauthorized: false }
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 10000, // Aumentamos a 10 segundos el límite
+    greetingTimeout: 10000,
+    socketTimeout: 10000
 });
 
 // RUTA PARA GENERAR Y ENVIAR EL CÓDIGO REAL
