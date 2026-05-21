@@ -47,12 +47,12 @@ const registrosPendientes = new Map();
 
 // ¡AQUÍ PONES TUS DATOS!
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
+    host: 'smtp-relay.brevo.com',
     port: 587,
     secure: false, // false para el puerto 587 (utiliza STARTTLS)
     auth: {
-        user: process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com', // <--- REEMPLAZA AQUÍ
-        pass: process.env.EMAIL_PASS || 'frzrmwvcapayuuyh' // <--- REEMPLAZA AQUÍ (Sin espacios)
+        user: process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com', // Tu correo con el que te registraste en Brevo
+        pass: process.env.EMAIL_PASS // La contraseña se leerá de las variables de entorno de Railway o tu archivo .env local
     },
     tls: { rejectUnauthorized: false },
     connectionTimeout: 10000, // Aumentamos a 10 segundos el límite
