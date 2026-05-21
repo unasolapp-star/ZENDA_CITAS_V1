@@ -48,8 +48,8 @@ const registrosPendientes = new Map();
 // ¡AQUÍ PONES TUS DATOS!
 const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false, // false para el puerto 587 (utiliza STARTTLS)
+    port: 465,
+    secure: true, // true para el puerto 465
     auth: {
         user: process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com', // Tu correo con el que te registraste en Brevo
         pass: process.env.EMAIL_PASS // La contraseña se leerá de las variables de entorno de Railway o tu archivo .env local
@@ -58,6 +58,15 @@ const transporter = nodemailer.createTransport({
     connectionTimeout: 10000, // Aumentamos a 10 segundos el límite
     greetingTimeout: 10000,
     socketTimeout: 10000
+});
+
+// VERIFICADOR AUTOMÁTICO DE CONEXIÓN CON BREVO
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("⚠️ ERROR DE CONEXIÓN CON BREVO:", error.message);
+    } else {
+        console.log("✅ Conexión exitosa con Brevo. El servidor puede enviar correos.");
+    }
 });
 
 // RUTA PARA GENERAR Y ENVIAR EL CÓDIGO REAL
