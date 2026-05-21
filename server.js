@@ -52,7 +52,7 @@ const transporter = nodemailer.createTransport({
     secure: true,
     auth: {
         user: process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com', // <--- REEMPLAZA AQUÍ
-        pass: process.env.EMAIL_PASS || 'ooehwkqasfeqxjqm' // <--- REEMPLAZA AQUÍ (Sin espacios)
+        pass: process.env.EMAIL_PASS || 'frzrmwvcapayuuyh' // <--- REEMPLAZA AQUÍ (Sin espacios)
     },
     tls: { rejectUnauthorized: false }
 });
@@ -60,34 +60,42 @@ const transporter = nodemailer.createTransport({
 // RUTA PARA GENERAR Y ENVIAR EL CÓDIGO REAL
 app.post('/enviar-codigo', async (req, res) => {
     const { email } = req.body;
-    const codigo = Math.floor(1000000 + Math.random() * 9000000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutos de validez
-    registrosPendientes.set(email, { codigo, expiresAt });
 
-    const mailOptions = {
-        from: '"Equipo Zenda" <' + (process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com') + '>', // <--- REEMPLAZA AQUÍ TAMBIÉN
-        to: email,
-        subject: 'Tu código de verificación de Zenda',
-        html: `
-            <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; color: #1e293b;">
-                <h2 style="color: #2563eb;">¡Bienvenido a Zenda!</h2>
-                <p>Tu código de verificación seguro es:</p>
-                <h1 style="background: #f1f5f9; padding: 15px; border-radius: 10px; letter-spacing: 5px; font-size: 32px; display: inline-block;">${codigo}</h1>
-                <p>Ingrésalo en la plataforma para continuar con tu registro.</p>
-            </div>
-        `
-    };
+    // 1. Verificar si el correo ya existe en la base de datos ANTES de enviar nada
+    db.query('SELECT id FROM usuarios WHERE email = ?', [email], async (err, results) => {
+        if (err) return res.status(500).json({ error: "Error consultando la base de datos." });
+        if (results.length > 0) return res.status(400).json({ error: "Este correo ya está registrado. Por favor, inicia sesión." });
 
-    try {
-        await transporter.sendMail(mailOptions);
-        console.log(`📧 Correo real enviado a: ${email}`);
-        res.status(200).json({ success: true, message: "Código enviado exitosamente" });
-    } catch (error) {
-        console.error("❌ Error enviando correo:", error);
-        // MODO PRUEBA: Si falla el envío de correo, igual abrimos el modal en el frontend y mostramos el código aquí en consola.
-        console.log(`\n⚠️ MODO DE PRUEBA: El correo falló, pero usa este código para verificar en la app: [ ${codigo} ]\n`);
-        res.status(200).json({ success: true, message: "Modo prueba: Revisa la consola de Node para ver el código." });
-    }
+        // 2. Si el correo es nuevo, generamos y enviamos el código
+        const codigo = Math.floor(1000000 + Math.random() * 9000000).toString();
+        const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutos de validez
+        registrosPendientes.set(email, { codigo, expiresAt });
+
+        const mailOptions = {
+            from: '"Equipo Zenda" <' + (process.env.EMAIL_USER || 'zenda.notificaciones@gmail.com') + '>', // <--- REEMPLAZA AQUÍ TAMBIÉN
+            to: email,
+            subject: 'Tu código de verificación de Zenda',
+            html: `
+                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; color: #1e293b;">
+                    <h2 style="color: #2563eb;">¡Bienvenido a Zenda!</h2>
+                    <p>Tu código de verificación seguro es:</p>
+                    <h1 style="background: #f1f5f9; padding: 15px; border-radius: 10px; letter-spacing: 5px; font-size: 32px; display: inline-block;">${codigo}</h1>
+                    <p>Ingrésalo en la plataforma para continuar con tu registro.</p>
+                </div>
+            `
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log(`📧 Correo real enviado a: ${email}`);
+            res.status(200).json({ success: true, message: "Código enviado exitosamente" });
+        } catch (error) {
+            console.error("❌ Error enviando correo:", error);
+            // MODO PRUEBA: Si falla el envío de correo, igual abrimos el modal en el frontend y mostramos el código aquí en consola.
+            console.log(`\n⚠️ MODO DE PRUEBA: El correo falló, pero usa este código para verificar en la app: [ ${codigo} ]\n`);
+            res.status(200).json({ success: true, message: "Modo prueba: Revisa la consola de Node para ver el código." });
+        }
+    });
 });
 
 // 2. RUTA DE REGISTRO
