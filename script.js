@@ -210,7 +210,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => { /
         } // End lógico
     } catch (err) { // Network Failure Server Caido
         console.error("❌ Error de red o código:", err); // Network failure node error
-        await customAlert("Error de conexión con el servidor local. ¿Ejecutaste 'node server.js'?", "#ef4444");  // Mensaje
+        await customAlert("Error de conexión con el servidor. Verifica tu conexión a internet o intenta más tarde.", "#ef4444");  // Mensaje
     } // Catch end
 }); // Listen End
 
@@ -292,7 +292,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             await customAlert(errorData.error || "Error al enviar el código de verificación.", "#ef4444"); // Renderiza razón ("El correo ya existe" por ejemplo)
         } // Cierra evaluador Express Result
     } catch (err) { // Disparador fallido Network
-        await customAlert("Error al solicitar el código: ¿Está encendido el servidor Node.js?", "#ef4444"); // Visual Alerta red
+        await customAlert("Error al solicitar el código: No se pudo conectar con el servidor.", "#ef4444"); // Visual Alerta red
     } finally { // Disparador Obligatorio (Pase lo que pase sin importar try o error catch)
         // Regresor UX para restaurar botones rotos
         btnSubmit.innerText = textoOriginal; // Regresa texto "Crear cuenta"

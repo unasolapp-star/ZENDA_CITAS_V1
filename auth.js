@@ -91,4 +91,21 @@ router.post('/register', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Error interno del servidor" }); }
 });
 
+// --- RUTA 3: INICIAR SESIÓN (LOGIN) ---
+router.post('/login', (req, res) => {
+    const { email, password } = req.body; // Extraemos las credenciales
+    
+    // Buscamos al usuario por su correo
+    db.query('SELECT * FROM usuarios WHERE email = ?', [email], async (err, results) => {
+        if (err) return res.status(500).json({ error: "Error en la base de datos al iniciar sesión" });
+        if (results.length === 0) return res.status(404).json({ error: "Usuario no encontrado" }); // No existe
+
+        // Si existe, comparamos la contraseña escrita con el hash de la Base de Datos
+        const match = await bcrypt.compare(password, results[0].password);
+        if (!match) return res.status(401).json({ error: "Contraseña incorrecta" }); // No coinciden
+
+        res.json({ userId: results[0].id, rol: results[0].rol }); // Éxito: devolvemos ID y Rol para el SessionStorage
+    });
+});
+
 module.exports = router; // Exportamos las rutas para usarlas en server.js

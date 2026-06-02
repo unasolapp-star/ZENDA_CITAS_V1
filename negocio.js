@@ -278,7 +278,7 @@ if (configForm) { // Validamos
             }
         } catch (err) { // Network abort
             console.error("Fallo de red:", err); // Network abort log
-            await customAlert("Error de conexión. ¿Está encendido el servidor Node.js?", "#ef4444"); // Network abort Visual
+            await customAlert("Error de conexión con el servidor. Intenta de nuevo más tarde.", "#ef4444"); // Network abort Visual
         }
     });
 }

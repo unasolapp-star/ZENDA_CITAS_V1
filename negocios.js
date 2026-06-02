@@ -92,7 +92,7 @@ router.post('/upload-logo/:duenoId', upload.single('logo'), async (req, res) => 
     
     // Generamos un nombre único usando Timestamp para evitar sobreescritura accidental
     const filename = 'logo-' + Date.now() + '.webp';
-    const filepath = path.join(__dirname, '../../uploads', filename); // Retrocedemos dos carpetas hasta llegar a root
+    const filepath = path.join(__dirname, 'uploads', filename); // Ahora que estamos en la raíz, apuntamos directo a la carpeta 'uploads'
     const logoUrl = `/uploads/${filename}`;
     
     try {
