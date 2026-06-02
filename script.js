@@ -14,6 +14,7 @@ function toggleForms() { // Actúa como un switch alternador (Toggle)
         loginF.style.display = "flex"; // Retorna la visibilidad al panel de inicio de sesión
         regF.style.display = "none"; // Elimina de la visibilidad la estructura de creación de cuenta
     } // Termina el bloque condicional del conmutador
+    setTimeout(updateGeometryCache, 100); // Recalculamos las posiciones 3D ya que las cajas se movieron de lugar
 } // Fin
 
 // 1.5 CONTROLADOR PARA ACCESO DIRECTO COMO EXPLORADOR MUDO (INVITADO)
@@ -76,41 +77,62 @@ let lastAngle = null; // Instancia null por si no hay ratón o estás en táctil
 
 setInterval(() => { accumulatedRotation *= 0.98; }, 100); // Decaimiento constante friccional (Baja lentamente a cero cada fracción de segundo como si fuera fricción al girar para que no se saturen variables)
 
-document.addEventListener('mousemove', (e) => { // Rastreador y espía constante en cada píxel que cruzas con el ratón
-    if (estaEscribiendoPassword) return; // Si la contraseña es tipeada corta la animación entera (prioridad)
+// --- OPTIMIZACIÓN DE RENDIMIENTO EXTREMO (Prevención de Estrangulamiento DOM / Layout Thrashing) ---
+let cachedEyes = [];
+let cachedWrapper = null;
+let isMouseMoving = false;
+let currentMouseX = 0;
+let currentMouseY = 0;
 
-    // Cálculos matemáticos vectoriales para pupila inteligente (Trackpad Eye)
-    pupils.forEach((pupil) => { // Rastrea a nivel sub-célula de HTML (class .pupil)
-        if(isDizzy) return; // Rompe si están mareados (Tienen espirales rotando ya, no necesitan el ratón)
-        const rect = pupil.parentElement.getBoundingClientRect(); // Extrae la posición geométrica estricta y absoluta del globo ocular con respecto al monitor global X e Y (Evitando distorsión de un scroll)
-        const eyeCenterX = rect.left + rect.width / 2; // Encuentra la coordenada X estricta calculando su offset sumando su grosor / 2
-        const eyeCenterY = rect.top + rect.height / 2; // Encuentra la coordenada Y estricta
-        const angle = Math.atan2(e.clientY - eyeCenterY, e.clientX - eyeCenterX); // Función inversa del ArcoTangente matemático para hallar los radianes desde el centro del globo al puntero actual (e.clientY)
-        const moveX = Math.cos(angle) * 5; // Función Coseno(Rad) para hallar el cateto adyacente horizontal y lo amplifica 5 pixeles forzados hacia afuera
-        const moveY = Math.sin(angle) * 5; // Función Seno(Rad) para hallar el cateto opuesto (altura vertical) de la pupila
-        pupil.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`; // Finalmente le dice al CSS: Trasládate (tu centro absoluto, mas tu movimiento X e Y calculados con la matemática anterior)
-    }); // Termina el mapeo por cada ojo encontrado
+function updateGeometryCache() { // Calculamos las posiciones reales en pantalla 1 SOLA VEZ en lugar de cientos
+    cachedEyes = Array.from(pupils).map(pupil => {
+        const rect = pupil.parentElement.getBoundingClientRect();
+        return { pupil, x: rect.left + window.scrollX + rect.width / 2, y: rect.top + window.scrollY + rect.height / 2 }; // Usamos coordenadas absolutas del documento
+    });
+    if (mascotsWrapper) {
+        const rect = mascotsWrapper.getBoundingClientRect();
+        cachedWrapper = { x: rect.left + window.scrollX + rect.width / 2, y: rect.top + window.scrollY + rect.height / 2 }; // Coordenadas absolutas
+    }
+}
+setTimeout(updateGeometryCache, 100); // Dar un respiro inicial al navegador antes de medir
+window.addEventListener('resize', updateGeometryCache); // Recalcular solo si estiran la ventana
 
-    // Algoritmo Anti-Espiral (Mareo por girar violentamente en redondo al contenedor)
-    if(mascotsWrapper) { // Revalida existencia
-        const rectWrapper = mascotsWrapper.getBoundingClientRect(); // Encuentra el plano entero de los dos animales juntos
-        const centerX = rectWrapper.left + rectWrapper.width / 2; // Centro masivo general X
-        const centerY = rectWrapper.top + rectWrapper.height / 2; // Centro masivo general Y
-        const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI; // Obtiene el arcoTangente general y lo multiplica por Radios/Pi para sacar equivalencias numéricas en 360 grados
+document.addEventListener('mousemove', (e) => { // Rastreador y espía del ratón ultra ligero
+    if (estaEscribiendoPassword) return;
+    currentMouseX = e.pageX; // Usamos pageX en lugar de clientX para que el scroll no afecte
+    currentMouseY = e.pageY; // Usamos pageY en lugar de clientY
 
-        if (lastAngle !== null && !isDizzy) { // Revisa si ya tiene comparador histórico y si no están mareados
-            let delta = currentAngle - lastAngle; // Saca diferencia entre tu mouse anterior vs nuevo de este milisegundo (Delta = velocidad)
-            if (delta > 180) delta -= 360; // Parche para saltos bruscos positivos
-            if (delta < -180) delta += 360; // Parche para saltos bruscos negativos
-            accumulatedRotation += delta; // Guarda el delta en tu alcancía contable declarada en la línea superior (let accumulatedRotation)
+    if (!isMouseMoving) {
+        requestAnimationFrame(procesarMovimientoFluido); // API nativa de 60/120 FPS del navegador (Libera el Procesador)
+        isMouseMoving = true;
+    }
+});
 
-            if (Math.abs(accumulatedRotation) > 360) { // Rompedor: Si al transformar a valores absolutos (+ o -), resulta ser que tu alcancía guarda más de 360 grados de movimiento continuo acumulado...
-                triggerDizzyState(); // ... Dispara el mareo! Significa que lograste girar todo el perímetro.
-            } // Cierra rompedor de mareo
-        } // Cierra If algorítmico
-        lastAngle = currentAngle; // Recarga de manera reactiva tu valor actual a último antes de reiniciarse el bucle del ratón
-    } // Cierra if wrapper principal
-}); // Apagón de escucha general Ratón Web
+function procesarMovimientoFluido() {
+    if(isDizzy) { isMouseMoving = false; return; }
+
+    // Cálculos matemáticos usando la CACHÉ (Memoria RAM ultra rápida) y no el DOM (Disco lento)
+    cachedEyes.forEach(eye => {
+        const angle = Math.atan2(currentMouseY - eye.y, currentMouseX - eye.x);
+        const moveX = Math.cos(angle) * 5;
+        const moveY = Math.sin(angle) * 5;
+        eye.pupil.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+    });
+
+    // Algoritmo Anti-Espiral usando CACHÉ
+    if(cachedWrapper) {
+        const currentAngle = Math.atan2(currentMouseY - cachedWrapper.y, currentMouseX - cachedWrapper.x) * 180 / Math.PI;
+        if (lastAngle !== null) {
+            let delta = currentAngle - lastAngle;
+            if (delta > 180) delta -= 360;
+            if (delta < -180) delta += 360;
+            accumulatedRotation += delta;
+            if (Math.abs(accumulatedRotation) > 360) triggerDizzyState();
+        }
+        lastAngle = currentAngle;
+    }
+    isMouseMoving = false; // Libera el candado para permitir calcular el siguiente frame gráfico
+}
 
 function triggerDizzyState() { // Función controladora de clase Mareo
     isDizzy = true; // Activa estatus global de bloqueo de ratón/ojos
