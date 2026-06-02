@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const db = require('./database');
 
+// --- RUTA: OBTENER NOMBRE DEL USUARIO ---
+router.get('/usuario-nombre/:id', (req, res) => {
+    db.query('SELECT nombre FROM usuarios WHERE id = ?', [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: "Error de servidor" });
+        if (results.length === 0) return res.status(404).json({ error: "No encontrado" });
+        res.json({ nombre: results[0].nombre });
+    });
+});
+
 // Extraer datos públicos de Perfil Modal
 router.get('/usuario/:id', (req, res) => {
     // Se pide de manera explícita evitar extraer la contraseña (password) de la BD por seguridad.

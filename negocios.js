@@ -53,6 +53,28 @@ router.get('/categorias', (req, res) => {
     });
 });
 
+// --- RUTA: OBTENER DATOS DEL NEGOCIO PARA EL DUEÑO ---
+router.get('/mi-negocio/:duenoId', (req, res) => {
+    const q = `SELECT n.*, d.latitud, d.longitud,
+               (SELECT GROUP_CONCAT(dia_semana) FROM negocios_dias WHERE negocio_id = n.id) as dias_habiles 
+               FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id WHERE n.dueno_id = ?`;
+    db.query(q, [req.params.duenoId], (err, results) => {
+        if (err) return res.status(500).json({ error: "Error de servidor" });
+        res.json(results[0] || {});
+    });
+});
+
+// --- RUTA: OBTENER DETALLES DEL NEGOCIO PARA EL CLIENTE ---
+router.get('/mi-negocio-detalles/:id', (req, res) => {
+    const q = `SELECT n.*, d.latitud, d.longitud,
+               (SELECT GROUP_CONCAT(dia_semana) FROM negocios_dias WHERE negocio_id = n.id) as dias_habiles 
+               FROM negocios n LEFT JOIN direcciones d ON n.direccion_id = d.id WHERE n.id = ?`;
+    db.query(q, [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: "Error de servidor" });
+        res.json(results[0] || {});
+    });
+});
+
 // --- RUTA: ACTUALIZAR EL PERFIL DEL NEGOCIO (DUEÑO) ---
 router.put('/actualizar-negocio/:duenoId', (req, res) => {
     const { nombre_negocio, telefono_negocio, categoria, latitud, longitud, hora_apertura, hora_cierre, intervalo_minutos, dias_habiles } = req.body;

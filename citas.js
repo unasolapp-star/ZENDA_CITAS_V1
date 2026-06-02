@@ -29,6 +29,16 @@ router.get('/generar-slots/:negocioId', (req, res) => {
     });
 });
 
+// --- RUTA: OBTENER CITAS OCUPADAS EN UNA FECHA ---
+router.get('/citas-ocupadas', (req, res) => {
+    const { negocio_id, fecha } = req.query;
+    const query = 'SELECT hora FROM citas WHERE negocio_id = ? AND fecha = ? AND estado NOT IN ("rechazada", "eliminada")';
+    db.query(query, [negocio_id, fecha], (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results.map(r => r.hora.substring(0, 5)));
+    });
+});
+
 // --- RUTA: AGENDAR UNA NUEVA CITA ---
 router.post('/citas', (req, res) => {
     const { cliente_id, negocio_id, fecha, hora } = req.body;
@@ -63,6 +73,15 @@ router.post('/citas', (req, res) => {
     });
 });
 
+// --- RUTA: ACTUALIZAR ESTADO DE UNA SOLA CITA ---
+router.put('/citas/:id/estado', (req, res) => {
+    const { estado } = req.body;
+    db.query('UPDATE citas SET estado = ? WHERE id = ?', [estado, req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: "Error al actualizar estado" });
+        res.json({ success: true });
+    });
+});
+
 // --- RUTA: ACTUALIZACIÓN EN LOTE (MASIVA) DE ESTADOS ---
 router.put('/citas/batch-estado', (req, res) => {
     const { ids, estado } = req.body; // Recibe un Arreglo de IDs numéricos
@@ -87,6 +106,25 @@ router.get('/citas-negocio/:duenoId', (req, res) => {
     db.query(dataQ, [req.params.duenoId, estado, limit, offset], (err, results) => {
         if (err) return res.status(500).send(err);
         res.json({ data: results }); // (Por brevedad visual eliminé countQ, pero la idea prevalece)
+    });
+});
+
+// --- RUTA: OBTENER CITAS DE UN CLIENTE ---
+router.get('/citas-cliente/:id', (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const estado = req.query.estado || 'pendiente';
+
+    const countQ = `SELECT COUNT(*) as total FROM citas WHERE cliente_id = ? AND estado = ?`;
+    const dataQ = `SELECT c.id, DATE_FORMAT(c.fecha, '%Y-%m-%d') as fecha, c.hora, c.estado, n.nombre_negocio FROM citas c JOIN negocios n ON c.negocio_id = n.id WHERE c.cliente_id = ? AND c.estado = ? ORDER BY c.fecha DESC LIMIT ? OFFSET ?`;
+
+    db.query(countQ, [req.params.id, estado], (err, countRes) => {
+        if (err) return res.status(500).send(err);
+        db.query(dataQ, [req.params.id, estado, limit, offset], (err, results) => {
+            if (err) return res.status(500).send(err);
+            res.json({ data: results, total: countRes[0].total, page, totalPages: Math.ceil(countRes[0].total / limit) });
+        });
     });
 });
 
