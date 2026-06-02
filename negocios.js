@@ -1,6 +1,6 @@
 const express = require('express'); // Importamos Express
 const router = express.Router(); // Módulo de enrutador
-const db = require('../config/database'); // Importamos DB
+const db = require('./database'); // Importamos DB
 const multer = require('multer'); // Librería para manipular subida de archivos Form-Data
 const sharp = require('sharp'); // Librería para manipular e interceptar imágenes
 const path = require('path');

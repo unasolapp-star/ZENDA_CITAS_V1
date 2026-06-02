@@ -9,10 +9,10 @@ const path = require('path');
 
 // --- IMPORTACIÓN DE RUTAS MODULARES ---
 // Se divide la lógica en archivos separados para eliminar el "Código Espagueti"
-const authRoutes = require('./src/routes/auth');
-const negocioRoutes = require('./src/routes/negocios');
-const citaRoutes = require('./src/routes/citas');
-const usuarioRoutes = require('./src/routes/usuarios');
+const authRoutes = require('./auth');
+const negocioRoutes = require('./negocios');
+const citaRoutes = require('./citas');
+const usuarioRoutes = require('./usuarios');
 
 const app = express();
 

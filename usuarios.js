@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const db = require('./database');
 
 // Extraer datos públicos de Perfil Modal
 router.get('/usuario/:id', (req, res) => {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const db = require('./database');
 
 // Lógica de Garbage Collection (Recolección de basura) para purgar citas con estado 'eliminada' después de 3 días
 const purgarCitasEliminadas = () => {

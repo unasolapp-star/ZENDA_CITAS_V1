@@ -1,7 +1,7 @@
 const express = require('express'); // Importamos Express
 const router = express.Router(); // Instanciamos un enrutador de Express
 const bcrypt = require('bcryptjs'); // Librería para encriptar contraseñas
-const db = require('../config/database'); // Importamos nuestra conexión a base de datos aislada
+const db = require('./database'); // Importamos nuestra conexión a base de datos aislada
 
 // Memoria temporal en RAM para guardar los códigos de registro.
 // Nota: Para escalar a producción multi-servidor se recomienda usar Redis.
